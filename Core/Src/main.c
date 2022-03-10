@@ -65,26 +65,36 @@ static void MX_TS_Init(void);
 
 void EXTI0_IRQHandler(void) //ISR for EXTI0 - Edge detection for USER BUTTON
 {                           //PC jumps to this code when there's an event at EXTI0
-  if (EXTI->PR!=1)   // If USER BUTTON is pressed, a rising edge happens
-  {                  // That event activates the IRQ, making the CPU call the ISR
-                     // In the ISR, the value of game will be bumped
-                     // to change the game in the main program
+  if (EXTI->PR = 0x01) //0000000000000001 in binary
+  {                         // USER BUTTON is pressed, a rising edge has been detected in PA0
+                            // That event raises a flag in PR0 (last digit), activating the IRQ
+                            // which makes the CPU call this ISR
+
+    // In the ISR, the value of game will be bumped to change games in the main program
     // Change game
     game++;
     if (game > 2) game = 1; // If game higher than 2, get back to 1 (game 1 and game 2)
 
-    EXTI->PR = 0x01; // Clear the EXTI0 flag
+    EXTI->PR = 0x01; // Clear the EXTI0 flag by writing a '1' in the PR0 position
   }
 
 }
 void EXTI1_IRQHandler(void) //ISR for EXTI1 - Edge detection for BUTTON 1
 {
+  if (EXTI->PR = 0x02) //0000000000000010 in binary
+  {                         // BUTTON 1 is pressed, a rising edge is detected in PA11
 
+    EXTI->PR = 0x02; // Clear the EXTI1 flag (1 in PR1 pos)
+  }
 }
 
 void EXTI2_IRQHandler(void) //ISR for EXTI2 - Edge detection for BUTTON 2
 {
+  if (EXTI->PR = 0x04) //0000000000000100 in binary
+  {                         // BUTTON 2 is pressed, a rising edge is detected in PA12
 
+    EXTI->PR = 0x04; // Clears the EXTI2 flag (1 in PR2 pos)
+  }
 }
 
 /* USER CODE END 0 */
@@ -121,31 +131,51 @@ int main(void)
   MX_LCD_Init();
   MX_TS_Init();
   /* USER CODE BEGIN 2 */
-
   //DECLARATION OF PERIPHERALS WE WILL USE
+
+  //LCD Setup
+  BSP_LCD_GLASS_Init();
+  BSP_LCD_GLASS_BarLevelConfig(0);
+  BSP_LCD_GLASS_Clear();
 
   //PAs - I/O
   //PA0 (USER BUTTON) - digital input (00)
-  GPIOA->MODER &= ~(1 << (0*2 +1));
+  GPIOA->MODER &= ~(1 << (0*2 + 1));
   GPIOA->MODER &= ~(1 << (0*2));
 
   //USING UNUSED I/O PINS 11 and 12
-  //PA11 (BUTTON 1) - digital input
-  GPIOA->MODER &= ~( << ());
-  //PA12 (BUTTON 2) - digital input
-  GPIOA->MODER &= ~( << ());
-  //LCD has to be activated
-  GPIOB->MODER &= ~( << ());
+  //PA11 (BUTTON 1) - digital input (00)
+  GPIOA->MODER &= ~(1 << (11*2 + 1));
+  GPIOA->MODER &= ~(1 << (11*2));
+  //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ????
+  //set as pull-up
+  //GPIOA->PUPDR |= (1 << (11*2));
+  //GPIOA->PUPDR &= ~(1 << (11*2 + 1));
+
+  //PA12 (BUTTON 2) - digital input (00)
+  GPIOA->MODER &= ~(1 << (12*2 + 1));
+  GPIOA->MODER &= ~(1 << (12*2));
+  //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ????
+  //set as pull-up
+  //GPIOA->PUPDR |= (1 << (12*2));
+  //GPIOA->PUPDR &= ~(1 << (12*2 + 1));
 
   //EXTIs - ALL rising edge
   //EXTI0
   EXTI->RTSR |= 0x01; // Enables rising edge in EXTI0
   EXTI->FTSR &= ~(0x01); // Disables falling edge in EXTI0
-  SYSCFG->EXTICR[0] = 0; // EXTI0 is linked to GPIOA (i.e. USER button = PA0)
+  SYSCFG->EXTICR[0] = 0; // EXTI0 is linked to GPIOA (USER BUTTON = PA0) - all zeros mean GPIOA
   EXTI->IMR |= 0x01; // Enables the Interrupt (i.e. the event)
-
   //EXTI1
+  EXTI->RTSR |= 0x02; // Enables rising edge in EXTI1
+  EXTI->FTSR &= ~(0x02); // Disables falling edge in EXTI1
+  SYSCFG->EXTICR[0] = 0; // EXTI2 is linked to GPIOA (BUTTON 1 = PA11) - TODO: DOUBLE CHECK
+  EXTI->IMR |= 0x02; // Enables the Interrupt (i.e. the event)
   //EXTI2
+  EXTI->RTSR |= 0x04; // Enables rising edge in EXTI2
+  EXTI->FTSR &= ~(0x04); // Disables falling edge in EXTI2
+  SYSCFG->EXTICR[0] = 0; // EXTI2 is linked to GPIOA (BUTTON 2 = PA12) - TODO: DOUBLE CHECK
+  EXTI->IMR |= 0x04; // Enables the Interrupt (i.e. the event)
 
   /* USER CODE END 2 */
 
@@ -153,10 +183,27 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    //display GAME 1 (initially)
+    //display GAME 1 (initially) --> DONE IN GLOBAL VAR DECLARATIOn
     //if USER BUTTON is pressed, change to GAME 2 (anytime, use interrupts)
     //else wait predetermined time and start (use espera() function)
 
+    switch(game)
+    {
+    case 1: // Game 1
+      BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME 1");
+
+
+      BSP_LCD_GLASS_Clear();
+    case 2: // Game 2
+      BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME 2");
+
+
+      BSP_LCD_GLASS_Clear();
+    default:
+      BSP_LCD_GLASS_DisplayString((uint8_t*)" ERROR");
+      espera(2000);
+      BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
