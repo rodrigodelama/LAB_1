@@ -18,7 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "SDM_Utils.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -45,6 +44,8 @@
 LCD_HandleTypeDef hlcd;
 
 /* USER CODE BEGIN PV */
+//GLOBAL VARS
+unsigned char game = 1;
 
 /* USER CODE END PV */
 
@@ -60,6 +61,31 @@ static void MX_TS_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+//INTERRUPTS GO HERE
+
+void EXTI0_IRQHandler(void) //ISR for EXTI0 - Edge detection for USER BUTTON
+{                           //PC jumps to this code when there's an event at EXTI0
+  if (EXTI->PR!=1)   // If USER BUTTON is pressed, a rising edge happens
+  {                  // That event activates the IRQ, making the CPU call the ISR
+                     // In the ISR, the value of game will be bumped
+                     // to change the game in the main program
+    // Change game
+    game++;
+    if (game > 2) game = 1; // If game higher than 2, get back to 1 (game 1 and game 2)
+
+    EXTI->PR = 0x01; // Clear the EXTI0 flag
+  }
+
+}
+void EXTI1_IRQHandler(void) //ISR for EXTI1 - Edge detection for BUTTON 1
+{
+
+}
+
+void EXTI2_IRQHandler(void) //ISR for EXTI2 - Edge detection for BUTTON 2
+{
+
+}
 
 /* USER CODE END 0 */
 
@@ -96,12 +122,41 @@ int main(void)
   MX_TS_Init();
   /* USER CODE BEGIN 2 */
 
+  //DECLARATION OF PERIPHERALS WE WILL USE
+
+  //PAs - I/O
+  //PA0 (USER BUTTON) - digital input (00)
+  GPIOA->MODER &= ~(1 << (0*2 +1));
+  GPIOA->MODER &= ~(1 << (0*2));
+
+  //USING UNUSED I/O PINS 11 and 12
+  //PA11 (BUTTON 1) - digital input
+  GPIOA->MODER &= ~( << ());
+  //PA12 (BUTTON 2) - digital input
+  GPIOA->MODER &= ~( << ());
+  //LCD has to be activated
+  GPIOB->MODER &= ~( << ());
+
+  //EXTIs - ALL rising edge
+  //EXTI0
+  EXTI->RTSR |= 0x01; // Enables rising edge in EXTI0
+  EXTI->FTSR &= ~(0x01); // Disables falling edge in EXTI0
+  SYSCFG->EXTICR[0] = 0; // EXTI0 is linked to GPIOA (i.e. USER button = PA0)
+  EXTI->IMR |= 0x01; // Enables the Interrupt (i.e. the event)
+
+  //EXTI1
+  //EXTI2
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    //display GAME 1 (initially)
+    //if USER BUTTON is pressed, change to GAME 2 (anytime, use interrupts)
+    //else wait predetermined time and start (use espera() function)
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -290,17 +345,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(IDD_CNT_EN_GPIO_Port, IDD_CNT_EN_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LD4_Pin|LD3_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : IDD_CNT_EN_Pin */
-  GPIO_InitStruct.Pin = IDD_CNT_EN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(IDD_CNT_EN_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
