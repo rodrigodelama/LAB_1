@@ -13,6 +13,10 @@
   * in the root directory of this software component.
   * If no LICENSE file comes with this software, it is provided AS-IS.
   *
+  * @authors        : Rodrigo De Lama Fernández @rodrigodelama
+  *                   Manuel Morales Niño @ikaoseu
+  *                   Jaime Mato Rodriguez @FIXME:
+  *
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -21,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "SDM_Utils.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,6 +50,7 @@ LCD_HandleTypeDef hlcd;
 /* USER CODE BEGIN PV */
 //GLOBAL VARS
 unsigned char game = 1;
+unsigned char winner = 0;
 
 /* USER CODE END PV */
 
@@ -79,11 +84,15 @@ void EXTI0_IRQHandler(void) //ISR for EXTI0 - Edge detection for USER BUTTON
   }
 
 }
+//TODO:
+//how do we determine which button is pressed first in the main section
+//the interrupt will obviously be executed first, but how do we discard the second player
 void EXTI1_IRQHandler(void) //ISR for EXTI1 - Edge detection for BUTTON 1
 {
   if (EXTI->PR = 0x02) //0000000000000010 in binary
   {                         // BUTTON 1 is pressed, a rising edge is detected in PA11
 
+    winner = 1;
     EXTI->PR = 0x02; // Clear the EXTI1 flag (1 in PR1 pos)
   }
 }
@@ -93,6 +102,7 @@ void EXTI2_IRQHandler(void) //ISR for EXTI2 - Edge detection for BUTTON 2
   if (EXTI->PR = 0x04) //0000000000000100 in binary
   {                         // BUTTON 2 is pressed, a rising edge is detected in PA12
 
+    winner = 2;
     EXTI->PR = 0x04; // Clears the EXTI2 flag (1 in PR2 pos)
   }
 }
@@ -191,12 +201,27 @@ int main(void)
     {
     case 1: // Game 1
       BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME 1");
+      espera(2000); //shall be random in next milestone
+      //light up LED
 
+      //interrupts determine which winner it is
+      switch(winner)
+      {
+      case 1:
+        BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 WON");
+      case 2:
+              BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 WON");
+      default:
+            BSP_LCD_GLASS_DisplayString((uint8_t*)" ERROR");
+            espera(2000);
+            BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
+      }
 
       BSP_LCD_GLASS_Clear();
     case 2: // Game 2
       BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME 2");
-
+      //TODO:
+      //Game 2 will be done at a later milestone
 
       BSP_LCD_GLASS_Clear();
     default:
