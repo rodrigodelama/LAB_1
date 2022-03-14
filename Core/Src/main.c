@@ -25,6 +25,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stm32l152c_discovery.h"
+#include "stm32l152c_discovery_glass_lcd.h"
 #include "SDM_Utils.h"
 /* USER CODE END Includes */
 
@@ -162,6 +164,8 @@ int main(void)
   //GPIOA->PUPDR |= (1 << (11*2));
   //GPIOA->PUPDR &= ~(1 << (11*2 + 1));
 
+  //Pull-Down: should be a constant 0, unless we press, then it should change to a 1
+
   //PA12 (BUTTON 2) - digital input (00)
   GPIOA->MODER &= ~(1 << (12*2 + 1));
   GPIOA->MODER &= ~(1 << (12*2));
@@ -209,7 +213,7 @@ int main(void)
     {
     case 1: // Game 1
       BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME 1");
-      espera(2000); //shall be random in next milestone
+      espera(2000); //shall be random in milestone 2
       //Light up GREEN LED
       GPIOB->BSRR = (1 << 7);
       //Interrupts will determine which winner it is
