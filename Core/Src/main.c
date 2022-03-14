@@ -74,7 +74,7 @@ static void MX_TS_Init(void);
 
 void EXTI0_IRQHandler(void) //ISR for EXTI0 - Edge detection for USER BUTTON
 {                           //PC jumps to this code when there's an event at EXTI0
-  if (EXTI->PR = 0x01) //0000000000000001 in binary
+  if ((EXTI->PR = 0x01) == 1) //0000000000000001 in binary
   {                         // USER BUTTON is pressed, a rising edge has been detected in PA0
                             // That event raises a flag in PR0 (last digit), activating the IRQ
                             // which makes the CPU call this ISR
@@ -93,7 +93,7 @@ void EXTI0_IRQHandler(void) //ISR for EXTI0 - Edge detection for USER BUTTON
 //the interrupt will obviously be executed first, but how do we discard the second player
 void EXTI1_IRQHandler(void) //ISR for EXTI1 - Edge detection for BUTTON 1
 {
-  if (EXTI->PR = 0x02) //0000000000000010 in binary
+  if ((EXTI->PR = 0x02) == 1) //0000000000000010 in binary
   {                         // BUTTON 1 is pressed, a rising edge is detected in PA11
 
     winner = 1;
@@ -103,7 +103,7 @@ void EXTI1_IRQHandler(void) //ISR for EXTI1 - Edge detection for BUTTON 1
 
 void EXTI2_IRQHandler(void) //ISR for EXTI2 - Edge detection for BUTTON 2
 {
-  if (EXTI->PR = 0x04) //0000000000000100 in binary
+  if ((EXTI->PR = 0x04) == 1) //0000000000000100 in binary
   {                         // BUTTON 2 is pressed, a rising edge is detected in PA12
 
     winner = 2;
@@ -266,6 +266,7 @@ int main(void)
         BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
         break;
     }
+    return 0;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
