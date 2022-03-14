@@ -15,7 +15,7 @@
   *
   * @authors        : Rodrigo De Lama Fernández @rodrigodelama
   *                   Manuel Morales Niño @ikaoseu
-  *                   Jaime Mato Rodriguez @FIXME:
+  *                   Jaime Mato Rodriguez @Pekeniojimi
   *
   ******************************************************************************
   */
@@ -162,18 +162,18 @@ int main(void)
   GPIOA->MODER &= ~(1 << (11*2));
   //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ????
   //set as pull-up
-  //GPIOA->PUPDR |= (1 << (11*2));
-  //GPIOA->PUPDR &= ~(1 << (11*2 + 1));
+  GPIOA->PUPDR |= (1 << (11*2));
+  GPIOA->PUPDR &= ~(1 << (11*2 + 1));
 
-  //Pull-Down: should be a constant 0, unless we press, then it should change to a 1
+  //Pull-Up: should be a constant 0, unless we press, then it should change to a 1
 
   //PA12 (BUTTON 2) - digital input (00)
   GPIOA->MODER &= ~(1 << (12*2 + 1));
   GPIOA->MODER &= ~(1 << (12*2));
   //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ????
   //set as pull-up
-  //GPIOA->PUPDR |= (1 << (12*2));
-  //GPIOA->PUPDR &= ~(1 << (12*2 + 1));
+  GPIOA->PUPDR |= (1 << (12*2));
+  GPIOA->PUPDR &= ~(1 << (12*2 + 1));
 
   //EXTIs - ALL rising edge
   //EXTI0
