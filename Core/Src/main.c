@@ -74,17 +74,20 @@ static void MX_TS_Init(void);
 
 void EXTI0_IRQHandler(void) //ISR for EXTI0 - Edge detection for USER BUTTON
 {                           //PC jumps to this code when there's an event at EXTI0
-  if ((EXTI->PR = 0x01) == 1) //0000000000000001 in binary
+  if (EXTI->PR != 0) //0000000000000001 in binary
   {                         // USER BUTTON is pressed, a rising edge has been detected in PA0
                             // That event raises a flag in PR0 (last digit), activating the IRQ
                             // which makes the CPU call this ISR
 
     // In the ISR, the value of game will be bumped to change games in the main program
     // Change game
-    game++;
-    if (game > 2) game = 1; // If game higher than 2, get back to 1 (game 1 and game 2)
+    if((GPIOA->IDR&0x0001) == 0) //rising edge
+    {
+      game++;
+      if (game > 2) game = 1; // If game higher than 2, get back to 1 (game 1 and game 2)
 
-    EXTI->PR = 0x01; // Clear the EXTI0 flag by writing a '1' in the PR0 position
+      EXTI->PR = 0x01; // Clear the EXTI0 flag by writing a '1' in the PR0 position
+    }
   }
 
 }
