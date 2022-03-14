@@ -180,12 +180,20 @@ int main(void)
   EXTI->RTSR |= 0x02; // Enables rising edge in EXTI1
   EXTI->FTSR &= ~(0x02); // Disables falling edge in EXTI1
   SYSCFG->EXTICR[0] = 0; // EXTI2 is linked to GPIOA (BUTTON 1 = PA11) - TODO: DOUBLE CHECK
-  EXTI->IMR |= 0x02; // Enables the Interrupt (i.e. the event)
+  EXTI->IMR |= 0x02; // Enables the interrupt
   //EXTI2
   EXTI->RTSR |= 0x04; // Enables rising edge in EXTI2
   EXTI->FTSR &= ~(0x04); // Disables falling edge in EXTI2
   SYSCFG->EXTICR[0] = 0; // EXTI2 is linked to GPIOA (BUTTON 2 = PA12) - TODO: DOUBLE CHECK
-  EXTI->IMR |= 0x04; // Enables the Interrupt (i.e. the event)
+  EXTI->IMR |= 0x04; // Enables the interrupt
+
+  //PB7 (GREEN LED) - digital output (01)
+  GPIOB->MODER &= ~(1 << (7*2 + 1));
+  GPIOB->MODER |= (1 << (7*2));
+
+  //PB6 (BLUE LED) - digital output (01) - ERROR LED
+  GPIOB->MODER &= ~(1 << (6*2 + 1));
+  GPIOB->MODER |= (1 << (6*2));
 
   /* USER CODE END 2 */
 
@@ -202,29 +210,35 @@ int main(void)
     case 1: // Game 1
       BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME 1");
       espera(2000); //shall be random in next milestone
-      //light up LED
-
-      //interrupts determine which winner it is
+      //Light up GREEN LED
+      GPIOB->BSRR = (1 << 7);
+      //Interrupts will determine which winner it is
       switch(winner)
       {
       case 1:
+        GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
         BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 WON");
       case 2:
-              BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 WON");
+        GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
+        BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 WON");
       default:
-            BSP_LCD_GLASS_DisplayString((uint8_t*)" ERROR");
-            espera(2000);
-            BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
+        GPIO->BSSR = (1 << 6); //Turn on the BLUE LED signalling an error
+        BSP_LCD_GLASS_DisplayString((uint8_t*)" ERROR");
+        espera(2000);
+        BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
       }
 
       BSP_LCD_GLASS_Clear();
+
     case 2: // Game 2
       BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME 2");
       //TODO:
       //Game 2 will be done at a later milestone
 
       BSP_LCD_GLASS_Clear();
+
     default:
+      GPIO->BSSR = (1 << 6); //Turn on the BLUE LED signalling an error
       BSP_LCD_GLASS_DisplayString((uint8_t*)" ERROR");
       espera(2000);
       BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
