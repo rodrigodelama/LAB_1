@@ -28,6 +28,7 @@
 #include "stm32l152c_discovery.h"
 #include "stm32l152c_discovery_glass_lcd.h"
 #include "SDM_Utils.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,7 +53,7 @@ LCD_HandleTypeDef hlcd;
 /* USER CODE BEGIN PV */
 //GLOBAL VARS
 unsigned char game = 1;
-unsigned char winner = 0;
+unsigned char winner = 0; //Init to 0, if it never changes, it will generate an error
 
 /* USER CODE END PV */
 
@@ -206,12 +207,13 @@ int main(void)
   while (1)
   {
     //display GAME 1 (initially) --> DONE IN GLOBAL VAR DECLARATIOn
-    //if USER BUTTON is pressed, change to GAME 2 (anytime, use interrupts)
+    //if USER BUTTON is pressed, change to GAME 2 (at ANY time - use interrupts)
     //else wait predetermined time and start (use espera() function)
 
     switch(game)
     {
     case 1: // Game 1
+      BSP_LCD_GLASS_Clear(); //FIXME: Not sure how important it is to clear before writing
       BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME 1");
       espera(2000); //shall be random in milestone 2
       //Light up GREEN LED
@@ -221,20 +223,25 @@ int main(void)
       {
       case 1:
         GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
+        BSP_LCD_GLASS_Clear(); //FIXME: see comment in Game 1
         BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 WON");
       case 2:
         GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
+        BSP_LCD_GLASS_Clear(); //FIXME:
         BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 WON");
       default:
         GPIO->BSSR = (1 << 6); //Turn on the BLUE LED signalling an error
+        BSP_LCD_GLASS_Clear(); //FIXME:
         BSP_LCD_GLASS_DisplayString((uint8_t*)" ERROR");
         espera(2000);
+        BSP_LCD_GLASS_Clear(); //FIXME:
         BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
       }
 
       BSP_LCD_GLASS_Clear();
 
     case 2: // Game 2
+      BSP_LCD_GLASS_Clear();
       BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME 2");
       //TODO:
       //Game 2 will be done at a later milestone
@@ -243,8 +250,10 @@ int main(void)
 
     default:
       GPIO->BSSR = (1 << 6); //Turn on the BLUE LED signalling an error
+      BSP_LCD_GLASS_Clear(); //FIXME:
       BSP_LCD_GLASS_DisplayString((uint8_t*)" ERROR");
       espera(2000);
+      BSP_LCD_GLASS_Clear(); //FIXME:
       BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
     }
     /* USER CODE END WHILE */
