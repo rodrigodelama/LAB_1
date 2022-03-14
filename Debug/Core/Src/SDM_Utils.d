@@ -1,2 +1,1 @@
-Core/Src/SDM_Utils.o: \
- C:/Users/rodri/OneDrive\ -\ Universidad\ Carlos\ III\ de\ Madrid/Microprocessor\ Based\ Digital\ Systems/code/own_lib/SDM_Utils.c
+Core/Src/SDM_Utils.o: ../Core/Src/SDM_Utils.c

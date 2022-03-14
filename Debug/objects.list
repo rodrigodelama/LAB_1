@@ -1,5 +1,7 @@
 "./Core/Src/SDM_Utils.o"
 "./Core/Src/main.o"
+"./Core/Src/stm32l152c_discovery.o"
+"./Core/Src/stm32l152c_discovery_glass_lcd.o"
 "./Core/Src/stm32l1xx_hal_msp.o"
 "./Core/Src/stm32l1xx_it.o"
 "./Core/Src/syscalls.o"

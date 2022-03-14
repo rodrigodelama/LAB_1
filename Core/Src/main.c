@@ -54,6 +54,7 @@ LCD_HandleTypeDef hlcd;
 //GLOBAL VARS
 unsigned char game = 1;
 unsigned char winner = 0; //Init to 0, if it never changes, it will generate an error
+//long 3secs = 3000000;
 
 /* USER CODE END PV */
 
@@ -214,8 +215,8 @@ int main(void)
     {
     case 1: // Game 1
       BSP_LCD_GLASS_Clear(); //FIXME: Not sure how important it is to clear before writing
-      BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME 1");
-      espera(2000); //shall be random in milestone 2
+      BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
+      espera(10000000); //shall be random in milestone 2
       //Light up GREEN LED
       GPIOB->BSRR = (1 << 7);
       //Interrupts will determine which winner it is
@@ -224,37 +225,46 @@ int main(void)
       case 1:
         GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
         BSP_LCD_GLASS_Clear(); //FIXME: see comment in Game 1
-        BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 WON");
+        BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W");
+        break;
       case 2:
         GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
         BSP_LCD_GLASS_Clear(); //FIXME:
-        BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 WON");
+        BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W");
+        break;
       default:
-        GPIO->BSSR = (1 << 6); //Turn on the BLUE LED signalling an error
+        GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
+        GPIOB->BSRR = (1 << 6); //Turn on the BLUE LED signalling an error
         BSP_LCD_GLASS_Clear(); //FIXME:
         BSP_LCD_GLASS_DisplayString((uint8_t*)" ERROR");
-        espera(2000);
+        espera(3000000);
         BSP_LCD_GLASS_Clear(); //FIXME:
         BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
+        break;
       }
 
       BSP_LCD_GLASS_Clear();
+      break;
 
     case 2: // Game 2
       BSP_LCD_GLASS_Clear();
-      BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME 2");
+      BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME2");
       //TODO:
       //Game 2 will be done at a later milestone
 
       BSP_LCD_GLASS_Clear();
+      break;
 
     default:
-      GPIO->BSSR = (1 << 6); //Turn on the BLUE LED signalling an error
+      GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
+      GPIOB->BSRR = (1 << 6); //Turn on the BLUE LED signalling an error
       BSP_LCD_GLASS_Clear(); //FIXME:
       BSP_LCD_GLASS_DisplayString((uint8_t*)" ERROR");
-      espera(2000);
+      espera(3000000);
       BSP_LCD_GLASS_Clear(); //FIXME:
       BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
+      break;
+
     }
     /* USER CODE END WHILE */
 
