@@ -148,9 +148,9 @@ int main(void)
   GPIOA->MODER &= ~(1 << (0*2));
   //EXTI0
   EXTI->RTSR |= 0x01; // Enables rising edge in EXTI0
-  //EXTI->FTSR &= ~(0x01); // Disables falling edge in EXTI0
+  EXTI->FTSR &= ~(0x01); // Disables falling edge in EXTI0
   SYSCFG->EXTICR[0] = 0; // EXTI0 is linked to GPIOA (USER BUTTON = PA0) - all zeros mean GPIOA
-  EXTI->IMR |= 0x01; // Enables the Interrupt (i.e. the event)
+  EXTI->IMR |= 0x01; // Enables the Interrupt (i.e. the event) (IMR = Interrupt Mask Register)
   NVIC->ISER[0] |= (1 << 6); //Enables EXTI0 in NVIC (pos 6)
 
   //USING UNUSED I/O PINS 11 and 12
@@ -159,7 +159,7 @@ int main(void)
   GPIOA->MODER &= ~(1 << (11*2));
   //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ????
   //Pull-Up: should be a constant 0, unless we press, then it should change to a 1
-  //set as pull-up
+  //Set up with pull-up resistor (01)
   GPIOA->PUPDR |= (1 << (11*2));
   GPIOA->PUPDR &= ~(1 << (11*2 + 1));
   //EXTI1
@@ -169,12 +169,10 @@ int main(void)
   EXTI->IMR |= 0x02; // Enables the interrupt
   NVIC->ISER[0] |= (1 << 7);
 
-
   //PA12 (BUTTON 2) - digital input (00)
   GPIOA->MODER &= ~(1 << (12*2 + 1));
   GPIOA->MODER &= ~(1 << (12*2));
-  //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ????
-  //set as pull-up (01)
+  //Set up with pull-up resistor (01)
   GPIOA->PUPDR |= (1 << (12*2));
   GPIOA->PUPDR &= ~(1 << (12*2 + 1));
   //EXTI2
@@ -188,7 +186,6 @@ int main(void)
   //PB7 (GREEN LED) - digital output (01)
   GPIOB->MODER &= ~(1 << (7*2 + 1));
   GPIOB->MODER |= (1 << (7*2));
-
   //PB6 (BLUE LED) - digital output (01) - ERROR LED
   GPIOB->MODER &= ~(1 << (6*2 + 1));
   GPIOB->MODER |= (1 << (6*2));
