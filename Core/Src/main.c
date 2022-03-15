@@ -52,8 +52,9 @@ LCD_HandleTypeDef hlcd;
 
 /* USER CODE BEGIN PV */
 //GLOBAL VARS
-unsigned char game = 1;
-unsigned char winner = 0; //Init to 0, if it never changes, it will generate an error
+int game = 1;
+int prev_game = 1;
+int winner = 0; //Init to 0, if it never changes, it will generate an error
 //long 3secs = 3000000; //DEPRECATE
 
 /* USER CODE END PV */
@@ -82,7 +83,7 @@ void EXTI0_IRQHandler(void)
   }
 }
 //TODO:
-//how do we determine which button is pressed first in the main section
+//how do we determine which button is pressed first in the main section ??
 //the interrupt will obviously be executed first, but how do we discard the second player
 void EXTI1_IRQHandler(void) //ISR for EXTI1 - Edge detection for BUTTON 1
 {
