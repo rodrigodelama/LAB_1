@@ -70,8 +70,38 @@ static void MX_TS_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-//INTERRUPTS GO HERE
+//INTERRUPTS
+void EXTI0_IRQHandler(void)
+{
+  if ((EXTI->PR&0x01) != 0) // Is EXTI0 flag on? //0000000000000001 in the Pending Register
+  {                         // USER BUTTON is pressed, a rising edge is detected in PA0
+    game++; // Increase the count
+    if (game > 2) game = 1; //Reset to 1 when game surpases 2
+    EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
+  }
+}
+//TODO:
+//how do we determine which button is pressed first in the main section
+//the interrupt will obviously be executed first, but how do we discard the second player
+void EXTI1_IRQHandler(void) //ISR for EXTI1 - Edge detection for BUTTON 1
+{
+  if ((EXTI->PR&0x02) != 0) //0000000000000010 in binary
+  {                         // BUTTON 1 is pressed, a rising edge is detected in PA11
 
+    winner = 1;
+    EXTI->PR |= (1 << 7); // Clear the EXTI1 flag (writes a 1 in PR1)
+  }
+}
+void EXTI2_IRQHandler(void) //ISR for EXTI2 - Edge detection for BUTTON 2
+{
+  if ((EXTI->PR&0x04) != 0) //0000000000000100 in binary
+  {                         // BUTTON 2 is pressed, a rising edge is detected in PA12
+    winner = 2;
+    EXTI->PR |= (1 << 8); // Clears the EXTI2 flag (writes a 1 in PR2)
+  }
+}
+
+/*
 void EXTI0_IRQHandler(void) //ISR for EXTI0 - Edge detection for USER BUTTON
 {                           //PC jumps to this code when there's an event at EXTI0
   if (EXTI->PR != 0) //0000000000000001 in binary
@@ -91,9 +121,6 @@ void EXTI0_IRQHandler(void) //ISR for EXTI0 - Edge detection for USER BUTTON
   }
 
 }
-//TODO:
-//how do we determine which button is pressed first in the main section
-//the interrupt will obviously be executed first, but how do we discard the second player
 void EXTI1_IRQHandler(void) //ISR for EXTI1 - Edge detection for BUTTON 1
 {
   if ((EXTI->PR = 0x02) == 1) //0000000000000010 in binary
@@ -113,6 +140,7 @@ void EXTI2_IRQHandler(void) //ISR for EXTI2 - Edge detection for BUTTON 2
     EXTI->PR = 0x04; // Clears the EXTI2 flag (1 in PR2 pos)
   }
 }
+*/
 
 /* USER CODE END 0 */
 
@@ -182,19 +210,24 @@ int main(void)
   //EXTIs - ALL rising edge
   //EXTI0
   EXTI->RTSR |= 0x01; // Enables rising edge in EXTI0
-  EXTI->FTSR &= ~(0x01); // Disables falling edge in EXTI0
+  //EXTI->FTSR &= ~(0x01); // Disables falling edge in EXTI0
   SYSCFG->EXTICR[0] = 0; // EXTI0 is linked to GPIOA (USER BUTTON = PA0) - all zeros mean GPIOA
   EXTI->IMR |= 0x01; // Enables the Interrupt (i.e. the event)
+  NVIC->ISER[0] |= (1 << 6); //Enables EXTI0 in NVIC (pos 6)
+
   //EXTI1
   EXTI->RTSR |= 0x02; // Enables rising edge in EXTI1
-  EXTI->FTSR &= ~(0x02); // Disables falling edge in EXTI1
+  //EXTI->FTSR &= ~(0x02); // Disables falling edge in EXTI1
   SYSCFG->EXTICR[0] = 0; // EXTI2 is linked to GPIOA (BUTTON 1 = PA11) - TODO: DOUBLE CHECK
   EXTI->IMR |= 0x02; // Enables the interrupt
+  NVIC->ISER[0] |= (1 << 7);
+
   //EXTI2
   EXTI->RTSR |= 0x04; // Enables rising edge in EXTI2
-  EXTI->FTSR &= ~(0x04); // Disables falling edge in EXTI2
+  //EXTI->FTSR &= ~(0x04); // Disables falling edge in EXTI2
   SYSCFG->EXTICR[0] = 0; // EXTI2 is linked to GPIOA (BUTTON 2 = PA12) - TODO: DOUBLE CHECK
   EXTI->IMR |= 0x04; // Enables the interrupt
+  NVIC->ISER[0] |= (1 << 8);
 
   //PB7 (GREEN LED) - digital output (01)
   GPIOB->MODER &= ~(1 << (7*2 + 1));
