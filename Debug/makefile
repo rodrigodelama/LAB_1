@@ -1,6 +1,6 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
-# Toolchain: GNU Tools for STM32 (9-2020-q2-update)
+# Toolchain: GNU Tools for STM32 (10.3-2021.10)
 ################################################################################
 
 -include ../makefile.init
@@ -43,14 +43,14 @@ BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ART
 EXECUTABLES += \
 Micros_LAB_Project.elf \
 
+MAP_FILES += \
+Micros_LAB_Project.map \
+
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
 Micros_LAB_Project.list \
-
-OBJCOPY_BIN += \
-Micros_LAB_Project.bin \
 
 
 # All Target
@@ -60,8 +60,8 @@ all: main-build
 main-build: Micros_LAB_Project.elf secondary-outputs
 
 # Tool invocations
-Micros_LAB_Project.elf: $(OBJS) $(USER_OBJS) C:\Users\mmora\OneDrive\Documentos\GitHub\LAB_1\STM32L152RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Micros_LAB_Project.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\mmora\OneDrive\Documentos\GitHub\LAB_1\STM32L152RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Micros_LAB_Project.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Micros_LAB_Project.elf Micros_LAB_Project.map: $(OBJS) $(USER_OBJS) C:\Users\rodri\OneDrive\ -\ Universidad\ Carlos\ III\ de\ Madrid\Microprocessor\ Based\ Digital\ Systems\code\LAB_1\STM32L152RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Micros_LAB_Project.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\rodri\OneDrive - Universidad Carlos III de Madrid\Microprocessor Based Digital Systems\code\LAB_1\STM32L152RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Micros_LAB_Project.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -75,17 +75,12 @@ Micros_LAB_Project.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DE
 	@echo 'Finished building: $@'
 	@echo ' '
 
-Micros_LAB_Project.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "Micros_LAB_Project.bin"
-	@echo 'Finished building: $@'
-	@echo ' '
-
 # Other Targets
 clean:
-	-$(RM) Micros_LAB_Project.bin Micros_LAB_Project.elf Micros_LAB_Project.list default.size.stdout
+	-$(RM) Micros_LAB_Project.elf Micros_LAB_Project.list Micros_LAB_Project.map default.size.stdout
 	-@echo ' '
 
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_BIN)
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
 
 fail-specified-linker-script-missing:
 	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'

@@ -52,10 +52,8 @@ LCD_HandleTypeDef hlcd;
 
 /* USER CODE BEGIN PV */
 //GLOBAL VARS
-int game = 1;
-int prev_game = 1;
+int game = 1; //game 1 is the starting point
 int winner = 0; //Init to 0, if it never changes, it will generate an error
-//long 3secs = 3000000; //DEPRECATE
 
 /* USER CODE END PV */
 
@@ -72,26 +70,31 @@ static void MX_TS_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 //INTERRUPTS
+//USER BUTTON is pressed, a rising edge is detected in PA0
 void EXTI0_IRQHandler(void)
 {
-  if ((EXTI->PR&0x01) != 0) // Is EXTI0 flag on? //0000000000000001 in the Pending Register
+  if ((EXTI->PR&BIT_0) != 0) // Is EXTI0 flag on? //0000000000000001 in the Pending Register
   {
-	  GPIOB->BSRR = (1 << 7); //FIXME: TESTING
-	  	      game++; // Increase the count
-	  	      if (game > 2) game = 1; //Reset to 1 when game surpases 2
-	  	      EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
-	  switch(game){
-	      case 1:
+	  if (game == 1) game = 2; //If at GAME 1, proceed to GAME 2
+	  else game = 1; //Reset to 1 after requesting change from GAME 2
+
+	  /* The method below is more repeatable
+	   * game++;
+	   * if (game > 2) game = 1;
+	   */
+
+	  switch(game)
+	  {
+	    case 1:
 	    	  BSP_LCD_GLASS_Clear(); //We will always clear before writing new text to avoid visual errors
 	    	  BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
-	      break;
-	      case 2:
+	    break;
+	    case 2:
 	    	  BSP_LCD_GLASS_Clear();
 	    	  BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME2");
 		  break;
 	  }
-	  // USER BUTTON is pressed, a rising edge is detected in PA0
-
+	  EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
   }
 }
 //TODO:
@@ -99,7 +102,7 @@ void EXTI0_IRQHandler(void)
 //the interrupt will obviously be executed first, but how do we discard the second player
 void EXTI1_IRQHandler(void) //ISR for EXTI1 - Edge detection for BUTTON 1
 {
-  if ((EXTI->PR&0x02) != 0) //0000000000000010 in binary
+  if ((EXTI->PR&BIT_2) != 0) //0000000000000010 in binary
   {                         // BUTTON 1 is pressed, a rising edge is detected in PA11
 
     winner = 1;
@@ -108,7 +111,7 @@ void EXTI1_IRQHandler(void) //ISR for EXTI1 - Edge detection for BUTTON 1
 }
 void EXTI2_IRQHandler(void) //ISR for EXTI2 - Edge detection for BUTTON 2
 {
-  if ((EXTI->PR&0x04) != 0) //0000000000000100 in binary
+  if ((EXTI->PR&BIT_3) != 0) //0000000000000100 in binary
   {                         // BUTTON 2 is pressed, a rising edge is detected in PA12
     winner = 2;
     EXTI->PR |= (1 << 8); // Clears the EXTI2 flag (writes a 1 in PR2)
@@ -161,10 +164,10 @@ int main(void)
   GPIOA->MODER &= ~(1 << (0*2 + 1));
   GPIOA->MODER &= ~(1 << (0*2));
   //EXTI0
-  EXTI->RTSR |= 0x01; // Enables rising edge in EXTI0
-  EXTI->FTSR &= ~(0x01); // Disables falling edge in EXTI0
+  EXTI->RTSR |= BIT_0; // Enables rising edge in EXTI0
+  EXTI->FTSR &= ~(BIT_0); // Disables falling edge in EXTI0
   SYSCFG->EXTICR[0] = 0; // EXTI0 is linked to GPIOA (USER BUTTON = PA0) - all zeros mean GPIOA
-  EXTI->IMR |= 0x01; // Enables the Interrupt (i.e. the event) (IMR = Interrupt Mask Register)
+  EXTI->IMR |= BIT_0; // Enables the Interrupt (i.e. the event) (IMR = Interrupt Mask Register)
   NVIC->ISER[0] |= (1 << 6); //Enables EXTI0 in NVIC (pos 6)
 
   //USING UNUSED I/O PINS 11 and 12
@@ -177,10 +180,10 @@ int main(void)
   GPIOA->PUPDR |= (1 << (11*2));
   GPIOA->PUPDR &= ~(1 << (11*2 + 1));
   //EXTI1
-  EXTI->RTSR |= 0x02; // Enables rising edge in EXTI1
-  EXTI->FTSR &= ~(0x02); // Disables falling edge in EXTI1
+  EXTI->RTSR |= BIT_2; // Enables rising edge in EXTI1
+  EXTI->FTSR &= ~(BIT_2); // Disables falling edge in EXTI1
   SYSCFG->EXTICR[0] = 0; // EXTI2 is linked to GPIOA (BUTTON 1 = PA11) - TODO: DOUBLE CHECK
-  EXTI->IMR |= 0x02; // Enables the interrupt
+  EXTI->IMR |= BIT_2; // Enables the interrupt
   NVIC->ISER[0] |= (1 << 7);
 
   //PA12 (BUTTON 2) - digital input (00)
@@ -190,19 +193,19 @@ int main(void)
   GPIOA->PUPDR |= (1 << (12*2));
   GPIOA->PUPDR &= ~(1 << (12*2 + 1));
   //EXTI2
-  EXTI->RTSR |= 0x04; // Enables rising edge in EXTI2
-  EXTI->FTSR &= ~(0x04); // Disables falling edge in EXTI2
+  EXTI->RTSR |= BIT_3; // Enables rising edge in EXTI2
+  EXTI->FTSR &= ~(BIT_3); // Disables falling edge in EXTI2
   SYSCFG->EXTICR[0] = 0; // EXTI2 is linked to GPIOA (BUTTON 2 = PA12) - TODO: DOUBLE CHECK
-  EXTI->IMR |= 0x04; // Enables the interrupt
+  EXTI->IMR |= BIT_3; // Enables the interrupt
   NVIC->ISER[0] |= (1 << 8);
 
   //LEDs
-  //PB7 (GREEN LED) - digital output (01)
-  GPIOB->MODER &= ~(1 << (7*2 + 1));
-  GPIOB->MODER |= (1 << (7*2));
   //PB6 (BLUE LED) - digital output (01) - ERROR LED
   GPIOB->MODER &= ~(1 << (6*2 + 1));
   GPIOB->MODER |= (1 << (6*2));
+  //PB7 (GREEN LED) - digital output (01)
+  GPIOB->MODER &= ~(1 << (7*2 + 1));
+  GPIOB->MODER |= (1 << (7*2));
 
   /* USER CODE END 2 */
 
@@ -217,9 +220,10 @@ int main(void)
     switch(game)
     {
       case 1: // Game 1
+        BSP_LCD_GLASS_Clear();
+        BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
         espera(10000000); //shall be random in milestone 2
-        //Light up GREEN LED
-        GPIOB->BSRR = (1 << 7);
+        GPIOB->BSRR = (1 << 7); //Light up GREEN LED
         espera(3000000);
         //Interrupts will determine which winner it is
         switch(winner)
@@ -244,20 +248,20 @@ int main(void)
             GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
             GPIOB->BSRR = (1 << 6); //Turn on the BLUE LED signalling an error
             BSP_LCD_GLASS_Clear();
-            BSP_LCD_GLASS_DisplayString((uint8_t*)" 2SLO");
+            BSP_LCD_GLASS_DisplayString((uint8_t*)" U SLo");
             espera(3000000);
             BSP_LCD_GLASS_Clear();
             BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
           break;
         }
       break;
+
       case 2: // Game 2
-
-        //TODO:
-        //Game 2 will be done at a later milestone
-
+        //TODO: Game 2 will be done at a later milestone
         BSP_LCD_GLASS_Clear();
+        BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME2");
       break;
+
       default:
         GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
         GPIOB->BSRR = (1 << 6); //Turn on the BLUE LED signalling an error
