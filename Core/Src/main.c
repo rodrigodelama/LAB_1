@@ -101,47 +101,6 @@ void EXTI2_IRQHandler(void) //ISR for EXTI2 - Edge detection for BUTTON 2
   }
 }
 
-/*
-void EXTI0_IRQHandler(void) //ISR for EXTI0 - Edge detection for USER BUTTON
-{                           //PC jumps to this code when there's an event at EXTI0
-  if (EXTI->PR != 0) //0000000000000001 in binary
-  {                         // USER BUTTON is pressed, a rising edge has been detected in PA0
-                            // That event raises a flag in PR0 (last digit), activating the IRQ
-                            // which makes the CPU call this ISR
-
-    // In the ISR, the value of game will be bumped to change games in the main program
-    // Change game
-    if((GPIOA->IDR&0x0001) == 0) //rising edge
-    {
-      game++;
-      if (game > 2) game = 1; // If game higher than 2, get back to 1 (game 1 and game 2)
-
-      EXTI->PR = 0x01; // Clear the EXTI0 flag by writing a '1' in the PR0 position
-    }
-  }
-
-}
-void EXTI1_IRQHandler(void) //ISR for EXTI1 - Edge detection for BUTTON 1
-{
-  if ((EXTI->PR = 0x02) == 1) //0000000000000010 in binary
-  {                         // BUTTON 1 is pressed, a rising edge is detected in PA11
-
-    winner = 1;
-    EXTI->PR = 0x02; // Clear the EXTI1 flag (1 in PR1 pos)
-  }
-}
-
-void EXTI2_IRQHandler(void) //ISR for EXTI2 - Edge detection for BUTTON 2
-{
-  if ((EXTI->PR = 0x04) == 1) //0000000000000100 in binary
-  {                         // BUTTON 2 is pressed, a rising edge is detected in PA12
-
-    winner = 2;
-    EXTI->PR = 0x04; // Clears the EXTI2 flag (1 in PR2 pos)
-  }
-}
-*/
-
 /* USER CODE END 0 */
 
 /**
@@ -183,31 +142,10 @@ int main(void)
   BSP_LCD_GLASS_BarLevelConfig(0);
   BSP_LCD_GLASS_Clear();
 
-  //PAs - I/O
+  //PAs + their EXTIs - I/O
   //PA0 (USER BUTTON) - digital input (00)
   GPIOA->MODER &= ~(1 << (0*2 + 1));
   GPIOA->MODER &= ~(1 << (0*2));
-
-  //USING UNUSED I/O PINS 11 and 12
-  //PA11 (BUTTON 1) - digital input (00)
-  GPIOA->MODER &= ~(1 << (11*2 + 1));
-  GPIOA->MODER &= ~(1 << (11*2));
-  //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ????
-  //set as pull-up
-  GPIOA->PUPDR |= (1 << (11*2));
-  GPIOA->PUPDR &= ~(1 << (11*2 + 1));
-
-  //Pull-Up: should be a constant 0, unless we press, then it should change to a 1
-
-  //PA12 (BUTTON 2) - digital input (00)
-  GPIOA->MODER &= ~(1 << (12*2 + 1));
-  GPIOA->MODER &= ~(1 << (12*2));
-  //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ????
-  //set as pull-up
-  GPIOA->PUPDR |= (1 << (12*2));
-  GPIOA->PUPDR &= ~(1 << (12*2 + 1));
-
-  //EXTIs - ALL rising edge
   //EXTI0
   EXTI->RTSR |= 0x01; // Enables rising edge in EXTI0
   //EXTI->FTSR &= ~(0x01); // Disables falling edge in EXTI0
@@ -215,20 +153,38 @@ int main(void)
   EXTI->IMR |= 0x01; // Enables the Interrupt (i.e. the event)
   NVIC->ISER[0] |= (1 << 6); //Enables EXTI0 in NVIC (pos 6)
 
+  //USING UNUSED I/O PINS 11 and 12
+  //PA11 (BUTTON 1) - digital input (00)
+  GPIOA->MODER &= ~(1 << (11*2 + 1));
+  GPIOA->MODER &= ~(1 << (11*2));
+  //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ????
+  //Pull-Up: should be a constant 0, unless we press, then it should change to a 1
+  //set as pull-up
+  GPIOA->PUPDR |= (1 << (11*2));
+  GPIOA->PUPDR &= ~(1 << (11*2 + 1));
   //EXTI1
   EXTI->RTSR |= 0x02; // Enables rising edge in EXTI1
-  //EXTI->FTSR &= ~(0x02); // Disables falling edge in EXTI1
+  EXTI->FTSR &= ~(0x02); // Disables falling edge in EXTI1
   SYSCFG->EXTICR[0] = 0; // EXTI2 is linked to GPIOA (BUTTON 1 = PA11) - TODO: DOUBLE CHECK
   EXTI->IMR |= 0x02; // Enables the interrupt
   NVIC->ISER[0] |= (1 << 7);
 
+
+  //PA12 (BUTTON 2) - digital input (00)
+  GPIOA->MODER &= ~(1 << (12*2 + 1));
+  GPIOA->MODER &= ~(1 << (12*2));
+  //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ????
+  //set as pull-up (01)
+  GPIOA->PUPDR |= (1 << (12*2));
+  GPIOA->PUPDR &= ~(1 << (12*2 + 1));
   //EXTI2
   EXTI->RTSR |= 0x04; // Enables rising edge in EXTI2
-  //EXTI->FTSR &= ~(0x04); // Disables falling edge in EXTI2
+  EXTI->FTSR &= ~(0x04); // Disables falling edge in EXTI2
   SYSCFG->EXTICR[0] = 0; // EXTI2 is linked to GPIOA (BUTTON 2 = PA12) - TODO: DOUBLE CHECK
   EXTI->IMR |= 0x04; // Enables the interrupt
   NVIC->ISER[0] |= (1 << 8);
 
+  //LEDs
   //PB7 (GREEN LED) - digital output (01)
   GPIOB->MODER &= ~(1 << (7*2 + 1));
   GPIOB->MODER |= (1 << (7*2));
