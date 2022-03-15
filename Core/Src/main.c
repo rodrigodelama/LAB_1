@@ -28,7 +28,6 @@
 #include "stm32l152c_discovery.h"
 #include "stm32l152c_discovery_glass_lcd.h"
 #include "SDM_Utils.h"
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,10 +50,11 @@
 LCD_HandleTypeDef hlcd;
 
 /* USER CODE BEGIN PV */
-//GLOBAL VARS
+//GLOBAL VARS & DEFINITIONS
+#define sec 2500000 //definition of 1 second
+
 int game = 1; //game 1 is the starting point
 int winner = 0; //Init to 0, if it never changes, it will generate an error
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -78,7 +78,7 @@ void EXTI0_IRQHandler(void)
 	  if (game == 1) game = 2; //If at GAME 1, proceed to GAME 2
 	  else game = 1; //Reset to 1 after requesting change from GAME 2
 
-	  /* The method below is more repeatable
+	  /* The method below might be more scalable
 	   * game++;
 	   * if (game > 2) game = 1;
 	   */
@@ -87,11 +87,13 @@ void EXTI0_IRQHandler(void)
 	  {
 	    case 1:
 	    	  BSP_LCD_GLASS_Clear(); //We will always clear before writing new text to avoid visual errors
-	    	  BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
+	    	  //FIXME: we CANNOT write to lcd from interrupts, we need to figure out a way to restart (generate a break) the game switch
+	    	  //BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
 	    break;
 	    case 2:
 	    	  BSP_LCD_GLASS_Clear();
-	    	  BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME2");
+	    	  //FIXME:
+	    	  //BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME2");
 		  break;
 	  }
 	  EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
@@ -104,7 +106,6 @@ void EXTI1_IRQHandler(void) //ISR for EXTI1 - Edge detection for BUTTON 1
 {
   if ((EXTI->PR&BIT_2) != 0) //0000000000000010 in binary
   {                         // BUTTON 1 is pressed, a rising edge is detected in PA11
-
     winner = 1;
     EXTI->PR |= (1 << 7); // Clear the EXTI1 flag (writes a 1 in PR1)
   }
@@ -177,8 +178,8 @@ int main(void)
   //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ????
   //Pull-Up: should be a constant 0, unless we press, then it should change to a 1
   //Set up with pull-up resistor (01)
-  GPIOA->PUPDR |= (1 << (11*2));
   GPIOA->PUPDR &= ~(1 << (11*2 + 1));
+  GPIOA->PUPDR |= (1 << (11*2));
   //EXTI1
   EXTI->RTSR |= BIT_2; // Enables rising edge in EXTI1
   EXTI->FTSR &= ~(BIT_2); // Disables falling edge in EXTI1
@@ -190,8 +191,8 @@ int main(void)
   GPIOA->MODER &= ~(1 << (12*2 + 1));
   GPIOA->MODER &= ~(1 << (12*2));
   //Set up with pull-up resistor (01)
-  GPIOA->PUPDR |= (1 << (12*2));
   GPIOA->PUPDR &= ~(1 << (12*2 + 1));
+  GPIOA->PUPDR |= (1 << (12*2));
   //EXTI2
   EXTI->RTSR |= BIT_3; // Enables rising edge in EXTI2
   EXTI->FTSR &= ~(BIT_3); // Disables falling edge in EXTI2
@@ -222,9 +223,9 @@ int main(void)
       case 1: // Game 1
         BSP_LCD_GLASS_Clear();
         BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
-        espera(10000000); //shall be random in milestone 2
+        espera(2*sec); //shall be random in milestone 2
         GPIOB->BSRR = (1 << 7); //Light up GREEN LED
-        espera(3000000);
+        espera(2*sec);
         //Interrupts will determine which winner it is
         switch(winner)
         {
@@ -233,7 +234,7 @@ int main(void)
 
             BSP_LCD_GLASS_Clear();
             BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W");
-            espera(10000000);
+            espera(3*sec);
           break;
           
           case 2:
@@ -241,15 +242,15 @@ int main(void)
 
             BSP_LCD_GLASS_Clear();
             BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W");
-            espera(10000000);
+            espera(3*sec);
           break;
           
           default:
             GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
-            GPIOB->BSRR = (1 << 6); //Turn on the BLUE LED signalling an error
+            GPIOB->BSRR = (1 << 6); //BLUE LED ON signalling an error
             BSP_LCD_GLASS_Clear();
-            BSP_LCD_GLASS_DisplayString((uint8_t*)" U SLo");
-            espera(3000000);
+            BSP_LCD_GLASS_DisplayString((uint8_t*)" ERROR"); //originally "U SLo"
+            espera(2*sec);
             BSP_LCD_GLASS_Clear();
             BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
           break;
@@ -264,11 +265,11 @@ int main(void)
 
       default:
         GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
-        GPIOB->BSRR = (1 << 6); //Turn on the BLUE LED signalling an error
-        BSP_LCD_GLASS_Clear(); //FIXME:
+        GPIOB->BSRR = (1 << 6); //BLUE LED ON signalling an error
+        BSP_LCD_GLASS_Clear();
         BSP_LCD_GLASS_DisplayString((uint8_t*)" ERROR");
-        espera(3000000);
-        BSP_LCD_GLASS_Clear(); //FIXME:
+        espera(2*sec);
+        BSP_LCD_GLASS_Clear();
         BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
       break;
     }
