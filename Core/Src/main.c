@@ -75,11 +75,23 @@ static void MX_TS_Init(void);
 void EXTI0_IRQHandler(void)
 {
   if ((EXTI->PR&0x01) != 0) // Is EXTI0 flag on? //0000000000000001 in the Pending Register
-  {                         // USER BUTTON is pressed, a rising edge is detected in PA0
-    GPIOB->BSRR = (1 << 7); //FIXME: TESTING
-    game++; // Increase the count
-    if (game > 2) game = 1; //Reset to 1 when game surpases 2
-    EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
+  {
+	  GPIOB->BSRR = (1 << 7); //FIXME: TESTING
+	  	      game++; // Increase the count
+	  	      if (game > 2) game = 1; //Reset to 1 when game surpases 2
+	  	      EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
+	  switch(game){
+	      case 1:
+	    	  BSP_LCD_GLASS_Clear(); //We will always clear before writing new text to avoid visual errors
+	    	  BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
+	      break;
+	      case 2:
+	    	  BSP_LCD_GLASS_Clear();
+	    	  BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME2");
+		  break;
+	  }
+	  // USER BUTTON is pressed, a rising edge is detected in PA0
+
   }
 }
 //TODO:
@@ -205,8 +217,6 @@ int main(void)
     switch(game)
     {
       case 1: // Game 1
-        BSP_LCD_GLASS_Clear(); //We will always clear before writing new text to avoid visual errors
-        BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
         espera(10000000); //shall be random in milestone 2
         //Light up GREEN LED
         GPIOB->BSRR = (1 << 7);
@@ -242,8 +252,7 @@ int main(void)
         }
       break;
       case 2: // Game 2
-        BSP_LCD_GLASS_Clear();
-        BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME2");
+
         //TODO:
         //Game 2 will be done at a later milestone
 
