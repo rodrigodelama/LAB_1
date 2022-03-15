@@ -52,9 +52,9 @@ LCD_HandleTypeDef hlcd;
 
 /* USER CODE BEGIN PV */
 //GLOBAL VARS
-int game = 1;
-int winner = 0; //Init to 0, if it never changes, it will generate an error
-//long 3secs = 3000000;
+unsigned char game = 1;
+unsigned char winner = 0; //Init to 0, if it never changes, it will generate an error
+//long 3secs = 3000000; //DEPRECATE
 
 /* USER CODE END PV */
 
@@ -75,6 +75,7 @@ void EXTI0_IRQHandler(void)
 {
   if ((EXTI->PR&0x01) != 0) // Is EXTI0 flag on? //0000000000000001 in the Pending Register
   {                         // USER BUTTON is pressed, a rising edge is detected in PA0
+    GPIOB->BSRR = (1 << 7); //FIXME: TESTING
     game++; // Increase the count
     if (game > 2) game = 1; //Reset to 1 when game surpases 2
     EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
@@ -196,14 +197,14 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    //display GAME 1 (initially) --> DONE IN GLOBAL VAR DECLARATIOn
+    //display GAME 1 (initially) --> DONE IN GLOBAL VAR DECLARATION
     //if USER BUTTON is pressed, change to GAME 2 (at ANY time - use interrupts)
     //else wait predetermined time and start (use espera() function)
 
     switch(game)
     {
       case 1: // Game 1
-        BSP_LCD_GLASS_Clear(); //FIXME: Not sure how important it is to clear before writing
+        BSP_LCD_GLASS_Clear(); //We will always clear before writing new text to avoid visual errors
         BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
         espera(10000000); //shall be random in milestone 2
         //Light up GREEN LED
@@ -214,29 +215,31 @@ int main(void)
         {
           case 1:
             GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
-            BSP_LCD_GLASS_Clear(); //FIXME: see comment in Game 1
+
+            BSP_LCD_GLASS_Clear();
             BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W");
-            break;
+            espera(10000000);
+          break;
           
           case 2:
             GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
-            BSP_LCD_GLASS_Clear(); //FIXME:
+
+            BSP_LCD_GLASS_Clear();
             BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W");
-            break;
+            espera(10000000);
+          break;
           
           default:
             GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
             GPIOB->BSRR = (1 << 6); //Turn on the BLUE LED signalling an error
-            BSP_LCD_GLASS_Clear(); //FIXME:
-            BSP_LCD_GLASS_DisplayString((uint8_t*)" 2slow");
+            BSP_LCD_GLASS_Clear();
+            BSP_LCD_GLASS_DisplayString((uint8_t*)" 2SLO");
             espera(3000000);
-            //BSP_LCD_GLASS_Clear(); //FIXME:
-           // BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
-            break;
+            BSP_LCD_GLASS_Clear();
+            BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
+          break;
         }
-
-        BSP_LCD_GLASS_Clear();
-        break;
+      break;
       case 2: // Game 2
         BSP_LCD_GLASS_Clear();
         BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME2");
@@ -244,7 +247,7 @@ int main(void)
         //Game 2 will be done at a later milestone
 
         BSP_LCD_GLASS_Clear();
-        break;
+      break;
       default:
         GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
         GPIOB->BSRR = (1 << 6); //Turn on the BLUE LED signalling an error
@@ -253,9 +256,9 @@ int main(void)
         espera(3000000);
         BSP_LCD_GLASS_Clear(); //FIXME:
         BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
-        break;
+      break;
     }
-    return 0;
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
