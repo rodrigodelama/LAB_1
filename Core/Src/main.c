@@ -76,10 +76,8 @@ void EXTI0_IRQHandler(void) //USER BUTTON is pressed, a rising edge is detected 
 {
   if ((EXTI->PR&BIT_0) != 0) // Is EXTI0 flag on? //0000000000000001 in the Pending Register
   {
-	  game++; //If at GAME 1, proceed to GAME 2
-	  if (game > 2) game = 1; //Reset to 1 after requesting change from GAME 2
-
-	  //actual_g = 1;
+	game++; //If at GAME 1, proceed to GAME 2
+	if (game > 2) game = 1; //Reset to 1 after requesting change from GAME 2
 
     EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
   }
@@ -90,15 +88,15 @@ void EXTI15_10_IRQHandler(void) //ISR for EXTI2 - Edge detection for BUTTON 2
 {
   if (EXTI->PR != 0)
   {
-    if (EXTI->PR & (1 << 7)) // 00001000000000000 in register
+    if (EXTI->PR & BIT_11) // 00001000000000000 in register
     {                        // BUTTON 1 is pressed, a rising edge is detected in PA11
       winner = 1;
-      EXTI->PR |= (1 << 7); // Clears the EXTI11 flag (writes a 1 in PR11)
+      EXTI->PR |= (1 << 11); // Clears the EXTI11 flag (writes a 1 in PR11)
     }
-    if (EXTI->PR & (1 << 7)) // 00010000000000000 in register
+    if (EXTI->PR & BIT_12) // 00010000000000000 in register
     {                        // BUTTON 2 is pressed, a rising edge is detected in PA12
       winner = 2;
-      EXTI->PR |= (1 << 8); // Clears the EXTI12 flag
+      EXTI->PR |= (1 << 12); // Clears the EXTI12 flag
     }
   }
 }

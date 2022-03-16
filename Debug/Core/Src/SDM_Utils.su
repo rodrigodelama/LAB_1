@@ -1,2 +1,2 @@
-../Core/Src/SDM_Utils.c:1:6:espera	24	static
-../Core/Src/SDM_Utils.c:7:6:Bin2Ascii	24	static
+SDM_Utils.c:1:6:espera	24	static
+SDM_Utils.c:7:6:Bin2Ascii	24	static
