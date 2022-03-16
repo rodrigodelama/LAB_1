@@ -187,13 +187,14 @@ int main(void)
   //Set up with pull-up resistor (01)
   GPIOA->PUPDR &= ~(1 << (12*2 + 1));
   GPIOA->PUPDR |= (1 << (12*2));
+/*
   //EXTI2
   EXTI->RTSR |= BIT_3; // Enables rising edge in EXTI2
   EXTI->FTSR &= ~(BIT_3); // Disables falling edge in EXTI2
   SYSCFG->EXTICR[0] = 0; // EXTI2 is linked to GPIOA (BUTTON 2 = PA12) - TODO: DOUBLE CHECK
   EXTI->IMR |= BIT_3; // Enables the interrupt
   NVIC->ISER[0] |= (1 << 8);
-
+*/
   //LEDs
   //PB6 (BLUE LED) - digital output (01) - ERROR LED
   GPIOB->MODER &= ~(1 << (6*2 + 1));
