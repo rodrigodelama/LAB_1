@@ -164,10 +164,10 @@ int main(void)
   GPIOA->PUPDR &= ~(1 << (11*2 + 1));
   GPIOA->PUPDR |= (1 << (11*2));
   //EXTI11
+  EXTI->IMR |= BIT_2; // Enables the interrupt
+  SYSCFG->EXTICR[2] = 0000; // Linking EXTI2 to GPIOA (BUTTON 1 = PA11)
   EXTI->RTSR |= BIT_11; // Enables rising edge in EXTI1
   EXTI->FTSR &= ~(BIT_11); // Disables falling edge in EXTI1
-  SYSCFG->EXTICR[2] = 0000; // Linking EXTI2 to GPIOA (BUTTON 1 = PA11)
-  EXTI->IMR |= BIT_2; // Enables the interrupt
   NVIC->ISER[1] |= (1 << 7); // EXTI11 has pos 7 in ISER[1]
 
   //PA12 (BUTTON 2) - digital input (00)
@@ -177,10 +177,10 @@ int main(void)
   GPIOA->PUPDR &= ~(1 << (12*2 + 1));
   GPIOA->PUPDR |= (1 << (12*2));
   //EXTI2
+  EXTI->IMR |= BIT_3; // Enables the interrupt
+  SYSCFG->EXTICR[3] = 0000; // Linking EXTI3 to GPIOA (BUTTON 2 = PA12)
   EXTI->RTSR |= BIT_12; // Enables rising edge in EXTI2
   EXTI->FTSR &= ~(BIT_12); // Disables falling edge in EXTI2
-  SYSCFG->EXTICR[3] = 0000; // Linking EXTI3 to GPIOA (BUTTON 2 = PA12)
-  EXTI->IMR |= BIT_3; // Enables the interrupt
   NVIC->ISER[1] |= (1 << 8); // EXTI3 has pos 8 in ISER[1]
 
   //LEDs
@@ -202,106 +202,41 @@ int main(void)
     //else wait predetermined time and start (use espera() function)
     if (prev_game != game) // To immediately switch between game 1 and 2
     {
+      GPIOB->BSRR = (1<<7) << 16; //in case the game mode was changed while awaiting input in GAME 1
       prev_game = game;
       switch(game)
       {
         case 1: // GAME 1
           while (game == 1)
           {
-            /*
-            if (actual_g == 1)
-            {
-              //FIXME: delete below
-              BSP_LCD_GLASS_Clear();
-              BSP_LCD_GLASS_DisplayString((uint8_t*)" SWAP");
-              espera(sec);
-              //
-              actual_g = 0;
-              break;
-            }
-            */
-            BSP_LCD_GLASS_Clear();
+            BSP_LCD_GLASS_Clear(); //Clear LCD
             BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
             espera(2*sec);
 
-            /*
+            //GAME STARTS HERE
+            BSP_LCD_GLASS_Clear(); //not strictly needed since we have the same No of chars to display
+            BSP_LCD_GLASS_DisplayString((uint8_t*)" READY");
             espera(2*sec);
-            BSP_LCD_GLASS_Clear();
-            BSP_LCD_GLASS_DisplayString((uint8_t*)" SET");
-            espera(sec);
-            BSP_LCD_GLASS_Clear();
-            espera(sec);
 
-            espera(2*sec);
-            BSP_LCD_GLASS_Clear();
-            */
+            // Waiting for users to input
+            while ((game == 1) && (winner == 0))
+            {
+              GPIOB->BSRR = (1<<7); //GREEN LED ON while no player has pressed their button
+            }
 
-            //while(game = 1)
-            //{
-              //GAME STARTS HERE
-              BSP_LCD_GLASS_Clear(); //Clear LCD
-              BSP_LCD_GLASS_DisplayString((uint8_t*)" READY");
+            //WINNER is determined by the interrupts, they will change the var winner to 1 or 2 respectively
+            if (winner == 1)
+            {
+              BSP_LCD_GLASS_Clear();
+              BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W");
               espera(2*sec);
-
-              /*
-              //to be changed into a method to avoid repetition
-              if (actual_g == 1)
-              {
-                //FIXME: delete below
-                BSP_LCD_GLASS_Clear();
-                BSP_LCD_GLASS_DisplayString((uint8_t*)" SWAP");
-                espera(sec);
-                //
-                GPIOB->BSRR = (1<<7) << 16; //G LED OFF - doesnt make any sense in GAME2
-                //actual_g = 0; // we need a double exit
-                break;
-              }
-              */
-              while ((game == 1) && (winner == 0))
-              {
-                GPIOB->BSRR = (1<<7); //GREEN LED ON while no player has pressed their button
-              }
-
-              //WINNER is determined by the interrupts, which will change the var winner to 1 or 2 respectively
-              if (winner == 1)
-              {
-                //GPIOB->BSRR = (1<<7) << 16; //clear the GREEN LED after a win
-                BSP_LCD_GLASS_Clear();
-                BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W");
-                espera(2*sec);
-              }
-              else if (winner == 2) // We use an else if because we only want ONE winner
-              {
-                //GPIOB->BSRR = (1<<7) << 16;
-                BSP_LCD_GLASS_Clear();
-                BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W");
-                espera(2*sec);
-              }
-
-              /*
-              if(/ (EXTI->PR&BIT_2) == 0 / (GPIOA->IDR&0x800) == 0 ) //button 1 pressed? PA11=1?
-              {
-                GPIOB->BSRR = (1<<7) << 16; //GREEN LED OFF
-                GPIOB->BSRR = (1<<6); //BLUE LED ON - Signaling a win (IRQ Worked)
-
-
-                GPIOB->BSRR = (1<<6) << 16; //BLUE OFF
-                break;
-              }
-              if( EXTI->PR!=0 / (GPIOA->IDR&0x1000) == 0 /) //button 2 pressed? PA12=1?
-              {
-                GPIOB->BSRR = (1<<7) << 16; //GREEN LED OFF
-                GPIOB->BSRR = (1<<6); //BLUE LED ON - Signaling a win (IRQ Worked)
-
-                BSP_LCD_GLASS_Clear(); //Clear LCD - less letters
-                BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W"); //LCD “ON”
-                espera(2*sec);
-
-                GPIOB->BSRR = (1<<6) << 16; //BLUE OFF
-                break;
-              }
-              */
-            //}
+            }
+            else if (winner == 2) // We use an else if because we only want ONE winner
+            {
+              BSP_LCD_GLASS_Clear();
+              BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W");
+              espera(2*sec);
+            }
           }
         break;
 
