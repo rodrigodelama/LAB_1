@@ -106,7 +106,7 @@ void EXTI1_IRQHandler(void) //ISR for EXTI1 - Edge detection for BUTTON 1
     EXTI->PR |= (1 << 7); // Clear the EXTI1 flag (writes a 1 in PR1)
   }
 }
-void EXTI2_IRQHandler(void) //ISR for EXTI2 - Edge detection for BUTTON 2
+void EXTI15_10_IRQHandler(void) //ISR for EXTI2 - Edge detection for BUTTON 2
 {
   if ((EXTI->PR&BIT_3) != 0) //0000000000000100 in binary
   {                         // BUTTON 2 is pressed, a rising edge is detected in PA12
@@ -181,12 +181,12 @@ int main(void)
   //Set up with pull-up resistor (01)
   GPIOA->PUPDR &= ~(1 << (11*2 + 1));
   GPIOA->PUPDR |= (1 << (11*2));
-  //EXTI1
-  EXTI->RTSR |= BIT_2; // Enables rising edge in EXTI1
-  EXTI->FTSR &= ~(BIT_2); // Disables falling edge in EXTI1
+  //EXTI11
+  EXTI->RTSR |= BIT_11; // Enables rising edge in EXTI1
+  EXTI->FTSR &= ~(BIT_11); // Disables falling edge in EXTI1
   SYSCFG->EXTICR[2] = 0000; // Linking EXTI2 to GPIOA (BUTTON 1 = PA11)
   EXTI->IMR |= BIT_2; // Enables the interrupt
-  NVIC->ISER[0] |= (1 << 7); // EXTI1 has pos 7
+  NVIC->ISER[1] |= (1 << 7); // EXTI11 has pos 7 in ISER[1]
 
   //PA12 (BUTTON 2) - digital input (00)
   GPIOA->MODER &= ~(1 << (12*2 + 1));
@@ -195,11 +195,11 @@ int main(void)
   GPIOA->PUPDR &= ~(1 << (12*2 + 1));
   GPIOA->PUPDR |= (1 << (12*2));
   //EXTI2
-  EXTI->RTSR |= BIT_3; // Enables rising edge in EXTI2
-  EXTI->FTSR &= ~(BIT_3); // Disables falling edge in EXTI2
+  EXTI->RTSR |= BIT_12; // Enables rising edge in EXTI2
+  EXTI->FTSR &= ~(BIT_12); // Disables falling edge in EXTI2
   SYSCFG->EXTICR[3] = 0000; // Linking EXTI3 to GPIOA (BUTTON 2 = PA12)
   EXTI->IMR |= BIT_3; // Enables the interrupt
-  NVIC->ISER[0] |= (1 << 8); // EXTI3 has pos 8
+  NVIC->ISER[1] |= (1 << 8); // EXTI3 has pos 8 in ISER[1]
 /*
 */
   //LEDs
