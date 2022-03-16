@@ -54,6 +54,7 @@ LCD_HandleTypeDef hlcd;
 #define sec 2500000 //definition of 1 second
 
 int game = 1; //game 1 is the starting point
+unsigned char change_game = 0; 
 int winner = 0; //Init to 0, if it never changes, it will generate an error
 /* USER CODE END PV */
 
@@ -84,6 +85,7 @@ void EXTI0_IRQHandler(void)
 	   * if (game > 2) game = 1;
 	   */
 
+    /*
 	  switch(game)
 	  {
 	    case 1:
@@ -99,6 +101,7 @@ void EXTI0_IRQHandler(void)
 	  }
 	  EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
   }
+  */
 }
 //TODO:
 //how do we determine which button is pressed first in the main section ??
@@ -107,9 +110,6 @@ void EXTI1_IRQHandler(void) //ISR for EXTI1 - Edge detection for BUTTON 1
 {
   if ((EXTI->PR&BIT_2) != 0) //0000000000000010 in binary
   {                         // BUTTON 1 is pressed, a rising edge is detected in PA11
-<<<<<<< Updated upstream
-    winner = 1;
-=======
     /*//TESTING
         if ((GPIOA->IDR&BIT_12) == 0)
         {
@@ -118,7 +118,6 @@ void EXTI1_IRQHandler(void) //ISR for EXTI1 - Edge detection for BUTTON 1
         }
      */
     //winner = 1; //Possible not needed
->>>>>>> Stashed changes
     EXTI->PR |= (1 << 7); // Clear the EXTI1 flag (writes a 1 in PR1)
   }
 }
@@ -232,42 +231,6 @@ int main(void)
 
     switch(game)
     {
-<<<<<<< Updated upstream
-      case 1: // Game 1
-        BSP_LCD_GLASS_Clear();
-        BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
-        espera(2*sec); //shall be random in milestone 2
-        GPIOB->BSRR = (1 << 7); //Light up GREEN LED
-        espera(2*sec);
-        //Interrupts will determine which winner it is
-        switch(winner)
-        {
-          case 1:
-            GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
-
-            BSP_LCD_GLASS_Clear();
-            BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W");
-            espera(3*sec);
-          break;
-          
-          case 2:
-            GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
-
-            BSP_LCD_GLASS_Clear();
-            BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W");
-            espera(3*sec);
-          break;
-          
-          default:
-            GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
-            GPIOB->BSRR = (1 << 6); //BLUE LED ON signalling an error
-            BSP_LCD_GLASS_Clear();
-            BSP_LCD_GLASS_DisplayString((uint8_t*)" ERROR"); //originally "U SLo"
-            espera(2*sec);
-            BSP_LCD_GLASS_Clear();
-            BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
-          break;
-=======
       case 1: // GAME 1
         while (1)
         {
@@ -323,7 +286,6 @@ int main(void)
             break;
           }
           }
->>>>>>> Stashed changes
         }
       break;
 
@@ -331,10 +293,7 @@ int main(void)
         //TODO: Game 2 will be done at a later milestone
         //BSP_LCD_GLASS_Clear();
         BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME2");
-<<<<<<< Updated upstream
-=======
         //espera(3*sec);
->>>>>>> Stashed changes
       break;
 
       default:
