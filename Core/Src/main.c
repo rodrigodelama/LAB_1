@@ -53,9 +53,9 @@ LCD_HandleTypeDef hlcd;
 //GLOBAL VARS & DEFINITIONS
 #define sec 2500000 //definition of 1 second
 
-int game = 1; //game 1 is the starting point
-unsigned char change_game = 0; 
-int winner = 0; //Init to 0, if it never changes, it will generate an error
+unsigned int game = 1; //game 1 is the starting point
+unsigned int change_game = 0;
+unsigned int winner = 0; //Init to 0, if it never changes, it will generate an error
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -84,6 +84,7 @@ void EXTI0_IRQHandler(void)
 	   * game++;
 	   * if (game > 2) game = 1;
 	   */
+    EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
   }
 }
 //TODO:
@@ -108,7 +109,12 @@ void EXTI2_IRQHandler(void) //ISR for EXTI2 - Edge detection for BUTTON 2
 {
   if ((EXTI->PR&BIT_3) != 0) //0000000000000100 in binary
   {                         // BUTTON 2 is pressed, a rising edge is detected in PA12
-    winner = 2;
+    if ((GPIOA->IDR&BIT_12) == 0)
+    {
+      GPIOB->BSRR = (1 << 6);
+      winner = 2;
+    }
+    //winner = 2;
     EXTI->PR |= (1 << 8); // Clears the EXTI2 flag (writes a 1 in PR2)
   }
 }
@@ -161,7 +167,7 @@ int main(void)
   //EXTI0
   EXTI->RTSR |= BIT_0; // Enables rising edge in EXTI0
   EXTI->FTSR &= ~(BIT_0); // Disables falling edge in EXTI0
-  SYSCFG->EXTICR[0] = 0; // EXTI0 is linked to GPIOA (USER BUTTON = PA0) - all zeros mean GPIOA
+  SYSCFG->EXTICR[0] = 0000; // Linking EXTI0 to GPIOA (USER BUTTON = PA0) - all zeros mean GPIOA
   EXTI->IMR |= BIT_0; // Enables the Interrupt (i.e. the event) (IMR = Interrupt Mask Register)
   NVIC->ISER[0] |= (1 << 6); //Enables EXTI0 in NVIC (pos 6)
 
@@ -175,11 +181,11 @@ int main(void)
   GPIOA->PUPDR &= ~(1 << (11*2 + 1));
   GPIOA->PUPDR |= (1 << (11*2));
   //EXTI1
+  EXTI->IMR |= BIT_2; // Enables the interrupt
   EXTI->RTSR |= BIT_2; // Enables rising edge in EXTI1
   EXTI->FTSR &= ~(BIT_2); // Disables falling edge in EXTI1
-  SYSCFG->EXTICR[0] = 0; // EXTI2 is linked to GPIOA (BUTTON 1 = PA11) - TODO: DOUBLE CHECK
-  EXTI->IMR |= BIT_2; // Enables the interrupt
-  NVIC->ISER[0] |= (1 << 7);
+  SYSCFG->EXTICR[2] = 0000; // Linking EXTI2 to GPIOA (BUTTON 1 = PA11)
+  NVIC->ISER[0] |= (1 << 7); // EXTI1 has pos 7
 
   //PA12 (BUTTON 2) - digital input (00)
   GPIOA->MODER &= ~(1 << (12*2 + 1));
@@ -188,11 +194,11 @@ int main(void)
   GPIOA->PUPDR &= ~(1 << (12*2 + 1));
   GPIOA->PUPDR |= (1 << (12*2));
   //EXTI2
+  EXTI->IMR |= BIT_3; // Enables the interrupt
   EXTI->RTSR |= BIT_3; // Enables rising edge in EXTI2
   EXTI->FTSR &= ~(BIT_3); // Disables falling edge in EXTI2
-  SYSCFG->EXTICR[0] |= BIT_3; // EXTI2 is linked to GPIOA (BUTTON 2 = PA12) - TODO: DOUBLE CHECK
-  EXTI->IMR |= BIT_3; // Enables the interrupt
-  NVIC->ISER[0] |= (1 << 8);
+  SYSCFG->EXTICR[3] = 0000; // Linking EXTI3 to GPIOA (BUTTON 2 = PA12)
+  NVIC->ISER[0] |= (1 << 8); // EXTI3 has pos 8
 /*
 */
   //LEDs
@@ -218,9 +224,6 @@ int main(void)
       case 1: // GAME 1
         while (1)
         {
-          //BSP_LCD_GLASS_Clear();
-          BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
-          espera(2*sec);
           if (change_game == 1)
           {
             //FIXME: delete below
@@ -231,22 +234,30 @@ int main(void)
             change_game = 0;
             break;
           }
+          BSP_LCD_GLASS_Clear();
+          BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
+          espera(2*sec);
 
           //GAME STARTS HERE
           BSP_LCD_GLASS_Clear(); //Clear LCD
           BSP_LCD_GLASS_DisplayString((uint8_t*)" READY");
+          /*
           espera(2*sec);
           BSP_LCD_GLASS_Clear();
           BSP_LCD_GLASS_DisplayString((uint8_t*)" SET");
           espera(sec);
           BSP_LCD_GLASS_Clear();
           espera(sec);
+          */
+
+          espera(2*sec);
+          BSP_LCD_GLASS_Clear();
           GPIOB->BSRR = (1<<7); //GREEN LED ON
           // DELETEespera(3*sec); //shall be random in milestone 2
           while(1)
           {
             //to be changed into a method to avoid repetition
-            /*
+
             if (change_game == 1)
             {
               //FIXME: delete below
@@ -254,11 +265,12 @@ int main(void)
               BSP_LCD_GLASS_DisplayString((uint8_t*)" SWAP");
               espera(sec);
               //
-              change_game = 0;
+              GPIOB->BSRR = (1<<7) << 16; //G LED OFF - doesnt make any sense in GAME2              break;
+              //change_game = 0; // we need a double exit
               break;
             }
-            */
             
+
             if(/* (EXTI->PR&BIT_2) == 0 */ (GPIOA->IDR&0x800) == 0 ) //button 1 pressed? PA11=1?
             {
               GPIOB->BSRR = (1<<7) << 16; //GREEN LED OFF
@@ -271,7 +283,7 @@ int main(void)
               GPIOB->BSRR = (1<<6) << 16; //BLUE OFF
               break;
             }
-            if( (EXTI->PR&BIT_3) != 0 /* (GPIOA->IDR&0x1000) == 0 */) //button 2 pressed? PA12=1?
+            if( winner == 2 /* (GPIOA->IDR&0x1000) == 0 */) //button 2 pressed? PA12=1?
             {
               GPIOB->BSRR = (1<<7) << 16; //GREEN LED OFF
               GPIOB->BSRR = (1<<6); //BLUE LED ON - Signaling a win (IRQ Worked)
