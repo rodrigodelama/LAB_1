@@ -53,9 +53,9 @@ LCD_HandleTypeDef hlcd;
 //GLOBAL VARS & DEFINITIONS
 #define sec 2500000 //definition of 1 second
 
-unsigned int prev_game = 0;
+unsigned int prev_game = 2;
 unsigned int game = 1; //game 1 is the starting point
-unsigned int actual_g = 0;
+//unsigned int actual_g = 0;
 unsigned int winner = 0; //Init to 0, if it never changes, it will generate an error
 /* USER CODE END PV */
 
@@ -148,10 +148,10 @@ int main(void)
   GPIOA->MODER &= ~(1 << (0*2 + 1));
   GPIOA->MODER &= ~(1 << (0*2));
   //EXTI0
+  EXTI->IMR |= BIT_0; // Enables the Interrupt (i.e. the event) (IMR = Interrupt Mask Register)
+  SYSCFG->EXTICR[0] = 0000; // Linking EXTI0 to GPIOA (USER BUTTON = PA0) - all zeros mean GPIOA
   EXTI->RTSR |= BIT_0; // Enables rising edge in EXTI0
   EXTI->FTSR &= ~(BIT_0); // Disables falling edge in EXTI0
-  SYSCFG->EXTICR[0] = 0000; // Linking EXTI0 to GPIOA (USER BUTTON = PA0) - all zeros mean GPIOA
-  EXTI->IMR |= BIT_0; // Enables the Interrupt (i.e. the event) (IMR = Interrupt Mask Register)
   NVIC->ISER[0] |= (1 << 6); //Enables EXTI0 in NVIC (pos 6)
 
   //USING UNUSED I/O PINS 11 and 12
@@ -200,7 +200,7 @@ int main(void)
     //Display GAME 1 (initially) --> DONE IN GLOBAL VAR DECLARATION
     //if USER BUTTON is pressed, change to GAME 2 (at ANY time - use interrupts)
     //else wait predetermined time and start (use espera() function)
-    if (prev_game != game) // To immediatelly switch between game 1 and 2
+    if (prev_game != game) // To immediately switch between game 1 and 2
     {
       prev_game = game;
       switch(game)
@@ -241,6 +241,7 @@ int main(void)
               //GAME STARTS HERE
               BSP_LCD_GLASS_Clear(); //Clear LCD
               BSP_LCD_GLASS_DisplayString((uint8_t*)" READY");
+              espera(2*sec);
 
               /*
               //to be changed into a method to avoid repetition
@@ -256,7 +257,7 @@ int main(void)
                 break;
               }
               */
-              while ((game == 1) % (winner == 0))
+              while ((game == 1) && (winner == 0))
               {
                 GPIOB->BSRR = (1<<7); //GREEN LED ON while no player has pressed their button
               }
@@ -278,7 +279,7 @@ int main(void)
               }
 
               /*
-              if(/* (EXTI->PR&BIT_2) == 0 / (GPIOA->IDR&0x800) == 0 ) //button 1 pressed? PA11=1?
+              if(/ (EXTI->PR&BIT_2) == 0 / (GPIOA->IDR&0x800) == 0 ) //button 1 pressed? PA11=1?
               {
                 GPIOB->BSRR = (1<<7) << 16; //GREEN LED OFF
                 GPIOB->BSRR = (1<<6); //BLUE LED ON - Signaling a win (IRQ Worked)
@@ -287,7 +288,7 @@ int main(void)
                 GPIOB->BSRR = (1<<6) << 16; //BLUE OFF
                 break;
               }
-              if( EXTI->PR!=0 /* (GPIOA->IDR&0x1000) == 0 /) //button 2 pressed? PA12=1?
+              if( EXTI->PR!=0 / (GPIOA->IDR&0x1000) == 0 /) //button 2 pressed? PA12=1?
               {
                 GPIOB->BSRR = (1<<7) << 16; //GREEN LED OFF
                 GPIOB->BSRR = (1<<6); //BLUE LED ON - Signaling a win (IRQ Worked)
