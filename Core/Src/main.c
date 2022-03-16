@@ -84,7 +84,7 @@ void EXTI0_IRQHandler(void)
 	   * game++;
 	   * if (game > 2) game = 1;
 	   */
-
+  }
 }
 //TODO:
 //how do we determine which button is pressed first in the main section ??
@@ -217,9 +217,9 @@ int main(void)
       case 1: // GAME 1
         while (1)
         {
-        //BSP_LCD_GLASS_Clear();
-        BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
-        espera(2*sec);
+          //BSP_LCD_GLASS_Clear();
+          BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
+          espera(2*sec);
           if (change_game == 1)
           {
             //FIXME: delete below
@@ -244,30 +244,44 @@ int main(void)
           // DELETEespera(3*sec); //shall be random in milestone 2
           while(1)
           {
-          if(/* (EXTI->PR&BIT_2) == 0 */ (GPIOA->IDR&0x800) == 0 ) //button 1 pressed? PA11=1?
-          {
-            GPIOB->BSRR = (1<<7) << 16; //GREEN LED OFF
-            GPIOB->BSRR = (1<<6); //BLUE LED ON - Signaling a win (IRQ Worked)
+            //to be changed into a method to avoid repetition
+            /*
+            if (change_game == 1)
+            {
+              //FIXME: delete below
+              BSP_LCD_GLASS_Clear();
+              BSP_LCD_GLASS_DisplayString((uint8_t*)" SWAP");
+              espera(sec);
+              //
+              change_game = 0;
+              break;
+            }
+            */
+            
+            if(/* (EXTI->PR&BIT_2) == 0 */ (GPIOA->IDR&0x800) == 0 ) //button 1 pressed? PA11=1?
+            {
+              GPIOB->BSRR = (1<<7) << 16; //GREEN LED OFF
+              GPIOB->BSRR = (1<<6); //BLUE LED ON - Signaling a win (IRQ Worked)
 
-            BSP_LCD_GLASS_Clear(); //Clear LCD
-            BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W"); //LCD “ON”
-            espera(2*sec);
+              BSP_LCD_GLASS_Clear(); //Clear LCD
+              BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W"); //LCD “ON”
+              espera(2*sec);
 
-            GPIOB->BSRR = (1<<6) << 16; //BLUE OFF
-            break;
-          }
-          if(/* (EXTI->PR&BIT_3) == 0 */ (GPIOA->IDR&0x1000) == 0 ) //button 2 pressed? PA12=1?
-          {
-            GPIOB->BSRR = (1<<7) << 16; //GREEN LED OFF
-            GPIOB->BSRR = (1<<6); //BLUE LED ON - Signaling a win (IRQ Worked)
+              GPIOB->BSRR = (1<<6) << 16; //BLUE OFF
+              break;
+            }
+            if(/* (EXTI->PR&BIT_3) == 0 */ (GPIOA->IDR&0x1000) == 0 ) //button 2 pressed? PA12=1?
+            {
+              GPIOB->BSRR = (1<<7) << 16; //GREEN LED OFF
+              GPIOB->BSRR = (1<<6); //BLUE LED ON - Signaling a win (IRQ Worked)
 
-            BSP_LCD_GLASS_Clear(); //Clear LCD - less letters
-            BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W"); //LCD “ON”
-            espera(2*sec);
+              BSP_LCD_GLASS_Clear(); //Clear LCD - less letters
+              BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W"); //LCD “ON”
+              espera(2*sec);
 
-            GPIOB->BSRR = (1<<6) << 16; //BLUE OFF
-            break;
-          }
+              GPIOB->BSRR = (1<<6) << 16; //BLUE OFF
+              break;
+            }
           }
         }
       break;
