@@ -388,557 +388,559 @@ void EXTI0_IRQHandler(void)
  80004ac:	b480      	push	{r7}
  80004ae:	af00      	add	r7, sp, #0
   if ((EXTI->PR&BIT_0) != 0) // Is EXTI0 flag on? //0000000000000001 in the Pending Register
- 80004b0:	4b0e      	ldr	r3, [pc, #56]	; (80004ec <EXTI0_IRQHandler+0x40>)
+ 80004b0:	4b0f      	ldr	r3, [pc, #60]	; (80004f0 <EXTI0_IRQHandler+0x44>)
  80004b2:	695b      	ldr	r3, [r3, #20]
  80004b4:	f003 0301 	and.w	r3, r3, #1
  80004b8:	2b00      	cmp	r3, #0
- 80004ba:	d013      	beq.n	80004e4 <EXTI0_IRQHandler+0x38>
+ 80004ba:	d014      	beq.n	80004e6 <EXTI0_IRQHandler+0x3a>
   {
-	  if (game == 1) game = 2; //If at GAME 1, proceed to GAME 2
- 80004bc:	4b0c      	ldr	r3, [pc, #48]	; (80004f0 <EXTI0_IRQHandler+0x44>)
+	  game++; //If at GAME 1, proceed to GAME 2
+ 80004bc:	4b0d      	ldr	r3, [pc, #52]	; (80004f4 <EXTI0_IRQHandler+0x48>)
  80004be:	681b      	ldr	r3, [r3, #0]
- 80004c0:	2b01      	cmp	r3, #1
- 80004c2:	d103      	bne.n	80004cc <EXTI0_IRQHandler+0x20>
- 80004c4:	4b0a      	ldr	r3, [pc, #40]	; (80004f0 <EXTI0_IRQHandler+0x44>)
- 80004c6:	2202      	movs	r2, #2
- 80004c8:	601a      	str	r2, [r3, #0]
- 80004ca:	e002      	b.n	80004d2 <EXTI0_IRQHandler+0x26>
-	  else game = 1; //Reset to 1 after requesting change from GAME 2
- 80004cc:	4b08      	ldr	r3, [pc, #32]	; (80004f0 <EXTI0_IRQHandler+0x44>)
- 80004ce:	2201      	movs	r2, #1
- 80004d0:	601a      	str	r2, [r3, #0]
-	  change_game = 1;
- 80004d2:	4b08      	ldr	r3, [pc, #32]	; (80004f4 <EXTI0_IRQHandler+0x48>)
- 80004d4:	2201      	movs	r2, #1
- 80004d6:	601a      	str	r2, [r3, #0]
+ 80004c0:	3301      	adds	r3, #1
+ 80004c2:	4a0c      	ldr	r2, [pc, #48]	; (80004f4 <EXTI0_IRQHandler+0x48>)
+ 80004c4:	6013      	str	r3, [r2, #0]
+	  if (game > 2) game = 1; //Reset to 1 after requesting change from GAME 2
+ 80004c6:	4b0b      	ldr	r3, [pc, #44]	; (80004f4 <EXTI0_IRQHandler+0x48>)
+ 80004c8:	681b      	ldr	r3, [r3, #0]
+ 80004ca:	2b02      	cmp	r3, #2
+ 80004cc:	d902      	bls.n	80004d4 <EXTI0_IRQHandler+0x28>
+ 80004ce:	4b09      	ldr	r3, [pc, #36]	; (80004f4 <EXTI0_IRQHandler+0x48>)
+ 80004d0:	2201      	movs	r2, #1
+ 80004d2:	601a      	str	r2, [r3, #0]
 
 	  /* The method below might be more scalable
-	   * game++;
-	   * if (game > 2) game = 1;
+	  if (game == 1) game = 2; //If at GAME 1, proceed to GAME 2
+	  else game = 1; //Reset to 1 after requesting change from GAME 2
 	   */
+	  change_game = 1;
+ 80004d4:	4b08      	ldr	r3, [pc, #32]	; (80004f8 <EXTI0_IRQHandler+0x4c>)
+ 80004d6:	2201      	movs	r2, #1
+ 80004d8:	601a      	str	r2, [r3, #0]
+
     EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
- 80004d8:	4b04      	ldr	r3, [pc, #16]	; (80004ec <EXTI0_IRQHandler+0x40>)
- 80004da:	695b      	ldr	r3, [r3, #20]
- 80004dc:	4a03      	ldr	r2, [pc, #12]	; (80004ec <EXTI0_IRQHandler+0x40>)
- 80004de:	f043 0340 	orr.w	r3, r3, #64	; 0x40
- 80004e2:	6153      	str	r3, [r2, #20]
+ 80004da:	4b05      	ldr	r3, [pc, #20]	; (80004f0 <EXTI0_IRQHandler+0x44>)
+ 80004dc:	695b      	ldr	r3, [r3, #20]
+ 80004de:	4a04      	ldr	r2, [pc, #16]	; (80004f0 <EXTI0_IRQHandler+0x44>)
+ 80004e0:	f043 0340 	orr.w	r3, r3, #64	; 0x40
+ 80004e4:	6153      	str	r3, [r2, #20]
   }
 }
- 80004e4:	bf00      	nop
- 80004e6:	46bd      	mov	sp, r7
- 80004e8:	bc80      	pop	{r7}
- 80004ea:	4770      	bx	lr
- 80004ec:	40010400 	.word	0x40010400
- 80004f0:	20000000 	.word	0x20000000
- 80004f4:	200000c0 	.word	0x200000c0
+ 80004e6:	bf00      	nop
+ 80004e8:	46bd      	mov	sp, r7
+ 80004ea:	bc80      	pop	{r7}
+ 80004ec:	4770      	bx	lr
+ 80004ee:	bf00      	nop
+ 80004f0:	40010400 	.word	0x40010400
+ 80004f4:	20000000 	.word	0x20000000
+ 80004f8:	200000c0 	.word	0x200000c0
 
-080004f8 <EXTI1_IRQHandler>:
+080004fc <EXTI1_IRQHandler>:
 //TODO:
 //how do we determine which button is pressed first in the main section ??
 //the interrupt will obviously be executed first, but how do we discard the second player
 void EXTI1_IRQHandler(void) //ISR for EXTI1 - Edge detection for BUTTON 1
 {
- 80004f8:	b480      	push	{r7}
- 80004fa:	af00      	add	r7, sp, #0
+ 80004fc:	b480      	push	{r7}
+ 80004fe:	af00      	add	r7, sp, #0
   if ((EXTI->PR&BIT_2) != 0) //0000000000000010 in binary
- 80004fc:	4b07      	ldr	r3, [pc, #28]	; (800051c <EXTI1_IRQHandler+0x24>)
- 80004fe:	695b      	ldr	r3, [r3, #20]
- 8000500:	f003 0304 	and.w	r3, r3, #4
- 8000504:	2b00      	cmp	r3, #0
- 8000506:	d005      	beq.n	8000514 <EXTI1_IRQHandler+0x1c>
+ 8000500:	4b07      	ldr	r3, [pc, #28]	; (8000520 <EXTI1_IRQHandler+0x24>)
+ 8000502:	695b      	ldr	r3, [r3, #20]
+ 8000504:	f003 0304 	and.w	r3, r3, #4
+ 8000508:	2b00      	cmp	r3, #0
+ 800050a:	d005      	beq.n	8000518 <EXTI1_IRQHandler+0x1c>
         GPIOB->BSRR = (1 << 6);
         winner = 1;
         }
      */
     //winner = 1; //Possible not needed
     EXTI->PR |= (1 << 7); // Clear the EXTI1 flag (writes a 1 in PR1)
- 8000508:	4b04      	ldr	r3, [pc, #16]	; (800051c <EXTI1_IRQHandler+0x24>)
- 800050a:	695b      	ldr	r3, [r3, #20]
- 800050c:	4a03      	ldr	r2, [pc, #12]	; (800051c <EXTI1_IRQHandler+0x24>)
- 800050e:	f043 0380 	orr.w	r3, r3, #128	; 0x80
- 8000512:	6153      	str	r3, [r2, #20]
+ 800050c:	4b04      	ldr	r3, [pc, #16]	; (8000520 <EXTI1_IRQHandler+0x24>)
+ 800050e:	695b      	ldr	r3, [r3, #20]
+ 8000510:	4a03      	ldr	r2, [pc, #12]	; (8000520 <EXTI1_IRQHandler+0x24>)
+ 8000512:	f043 0380 	orr.w	r3, r3, #128	; 0x80
+ 8000516:	6153      	str	r3, [r2, #20]
   }
 }
- 8000514:	bf00      	nop
- 8000516:	46bd      	mov	sp, r7
- 8000518:	bc80      	pop	{r7}
- 800051a:	4770      	bx	lr
- 800051c:	40010400 	.word	0x40010400
+ 8000518:	bf00      	nop
+ 800051a:	46bd      	mov	sp, r7
+ 800051c:	bc80      	pop	{r7}
+ 800051e:	4770      	bx	lr
+ 8000520:	40010400 	.word	0x40010400
 
-08000520 <EXTI2_IRQHandler>:
+08000524 <EXTI2_IRQHandler>:
 void EXTI2_IRQHandler(void) //ISR for EXTI2 - Edge detection for BUTTON 2
 {
- 8000520:	b480      	push	{r7}
- 8000522:	af00      	add	r7, sp, #0
+ 8000524:	b480      	push	{r7}
+ 8000526:	af00      	add	r7, sp, #0
   if ((EXTI->PR&BIT_3) != 0) //0000000000000100 in binary
- 8000524:	4b0d      	ldr	r3, [pc, #52]	; (800055c <EXTI2_IRQHandler+0x3c>)
- 8000526:	695b      	ldr	r3, [r3, #20]
- 8000528:	f003 0308 	and.w	r3, r3, #8
- 800052c:	2b00      	cmp	r3, #0
- 800052e:	d011      	beq.n	8000554 <EXTI2_IRQHandler+0x34>
+ 8000528:	4b0d      	ldr	r3, [pc, #52]	; (8000560 <EXTI2_IRQHandler+0x3c>)
+ 800052a:	695b      	ldr	r3, [r3, #20]
+ 800052c:	f003 0308 	and.w	r3, r3, #8
+ 8000530:	2b00      	cmp	r3, #0
+ 8000532:	d011      	beq.n	8000558 <EXTI2_IRQHandler+0x34>
   {                         // BUTTON 2 is pressed, a rising edge is detected in PA12
     if ((GPIOA->IDR&BIT_12) == 0)
- 8000530:	4b0b      	ldr	r3, [pc, #44]	; (8000560 <EXTI2_IRQHandler+0x40>)
- 8000532:	691b      	ldr	r3, [r3, #16]
- 8000534:	f403 5380 	and.w	r3, r3, #4096	; 0x1000
- 8000538:	2b00      	cmp	r3, #0
- 800053a:	d105      	bne.n	8000548 <EXTI2_IRQHandler+0x28>
+ 8000534:	4b0b      	ldr	r3, [pc, #44]	; (8000564 <EXTI2_IRQHandler+0x40>)
+ 8000536:	691b      	ldr	r3, [r3, #16]
+ 8000538:	f403 5380 	and.w	r3, r3, #4096	; 0x1000
+ 800053c:	2b00      	cmp	r3, #0
+ 800053e:	d105      	bne.n	800054c <EXTI2_IRQHandler+0x28>
     {
       GPIOB->BSRR = (1 << 6);
- 800053c:	4b09      	ldr	r3, [pc, #36]	; (8000564 <EXTI2_IRQHandler+0x44>)
- 800053e:	2240      	movs	r2, #64	; 0x40
- 8000540:	619a      	str	r2, [r3, #24]
+ 8000540:	4b09      	ldr	r3, [pc, #36]	; (8000568 <EXTI2_IRQHandler+0x44>)
+ 8000542:	2240      	movs	r2, #64	; 0x40
+ 8000544:	619a      	str	r2, [r3, #24]
       winner = 2;
- 8000542:	4b09      	ldr	r3, [pc, #36]	; (8000568 <EXTI2_IRQHandler+0x48>)
- 8000544:	2202      	movs	r2, #2
- 8000546:	601a      	str	r2, [r3, #0]
+ 8000546:	4b09      	ldr	r3, [pc, #36]	; (800056c <EXTI2_IRQHandler+0x48>)
+ 8000548:	2202      	movs	r2, #2
+ 800054a:	601a      	str	r2, [r3, #0]
     }
     //winner = 2;
     EXTI->PR |= (1 << 8); // Clears the EXTI2 flag (writes a 1 in PR2)
- 8000548:	4b04      	ldr	r3, [pc, #16]	; (800055c <EXTI2_IRQHandler+0x3c>)
- 800054a:	695b      	ldr	r3, [r3, #20]
- 800054c:	4a03      	ldr	r2, [pc, #12]	; (800055c <EXTI2_IRQHandler+0x3c>)
- 800054e:	f443 7380 	orr.w	r3, r3, #256	; 0x100
- 8000552:	6153      	str	r3, [r2, #20]
+ 800054c:	4b04      	ldr	r3, [pc, #16]	; (8000560 <EXTI2_IRQHandler+0x3c>)
+ 800054e:	695b      	ldr	r3, [r3, #20]
+ 8000550:	4a03      	ldr	r2, [pc, #12]	; (8000560 <EXTI2_IRQHandler+0x3c>)
+ 8000552:	f443 7380 	orr.w	r3, r3, #256	; 0x100
+ 8000556:	6153      	str	r3, [r2, #20]
   }
 }
- 8000554:	bf00      	nop
- 8000556:	46bd      	mov	sp, r7
- 8000558:	bc80      	pop	{r7}
- 800055a:	4770      	bx	lr
- 800055c:	40010400 	.word	0x40010400
- 8000560:	40020000 	.word	0x40020000
- 8000564:	40020400 	.word	0x40020400
- 8000568:	200000c4 	.word	0x200000c4
+ 8000558:	bf00      	nop
+ 800055a:	46bd      	mov	sp, r7
+ 800055c:	bc80      	pop	{r7}
+ 800055e:	4770      	bx	lr
+ 8000560:	40010400 	.word	0x40010400
+ 8000564:	40020000 	.word	0x40020000
+ 8000568:	40020400 	.word	0x40020400
+ 800056c:	200000c4 	.word	0x200000c4
 
-0800056c <main>:
+08000570 <main>:
 /**
   * @brief  The application entry point.
   * @retval int
   */
 int main(void)
 {
- 800056c:	b580      	push	{r7, lr}
- 800056e:	af00      	add	r7, sp, #0
+ 8000570:	b580      	push	{r7, lr}
+ 8000572:	af00      	add	r7, sp, #0
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
- 8000570:	f001 fa83 	bl	8001a7a <HAL_Init>
+ 8000574:	f001 fa81 	bl	8001a7a <HAL_Init>
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
- 8000574:	f000 f962 	bl	800083c <SystemClock_Config>
+ 8000578:	f000 f960 	bl	800083c <SystemClock_Config>
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
- 8000578:	f000 fa5c 	bl	8000a34 <MX_GPIO_Init>
+ 800057c:	f000 fa5a 	bl	8000a34 <MX_GPIO_Init>
   MX_ADC_Init();
- 800057c:	f000 f9c6 	bl	800090c <MX_ADC_Init>
+ 8000580:	f000 f9c4 	bl	800090c <MX_ADC_Init>
   MX_LCD_Init();
- 8000580:	f000 fa1e 	bl	80009c0 <MX_LCD_Init>
+ 8000584:	f000 fa1c 	bl	80009c0 <MX_LCD_Init>
   MX_TS_Init();
- 8000584:	f000 fa50 	bl	8000a28 <MX_TS_Init>
+ 8000588:	f000 fa4e 	bl	8000a28 <MX_TS_Init>
   /* USER CODE BEGIN 2 */
   //DECLARATION OF PERIPHERALS WE WILL USE
 
   //LCD Setup
   BSP_LCD_GLASS_Init();
- 8000588:	f000 fab4 	bl	8000af4 <BSP_LCD_GLASS_Init>
+ 800058c:	f000 fab2 	bl	8000af4 <BSP_LCD_GLASS_Init>
   BSP_LCD_GLASS_BarLevelConfig(0);
- 800058c:	2000      	movs	r0, #0
- 800058e:	f000 fae9 	bl	8000b64 <BSP_LCD_GLASS_BarLevelConfig>
+ 8000590:	2000      	movs	r0, #0
+ 8000592:	f000 fae7 	bl	8000b64 <BSP_LCD_GLASS_BarLevelConfig>
   BSP_LCD_GLASS_Clear();
- 8000592:	f000 ff31 	bl	80013f8 <BSP_LCD_GLASS_Clear>
+ 8000596:	f000 ff2f 	bl	80013f8 <BSP_LCD_GLASS_Clear>
 
   //PAs + their EXTIs - I/O
   //PA0 (USER BUTTON) - digital input (00)
   GPIOA->MODER &= ~(1 << (0*2 + 1));
- 8000596:	4b97      	ldr	r3, [pc, #604]	; (80007f4 <main+0x288>)
- 8000598:	681b      	ldr	r3, [r3, #0]
- 800059a:	4a96      	ldr	r2, [pc, #600]	; (80007f4 <main+0x288>)
- 800059c:	f023 0302 	bic.w	r3, r3, #2
- 80005a0:	6013      	str	r3, [r2, #0]
+ 800059a:	4b97      	ldr	r3, [pc, #604]	; (80007f8 <main+0x288>)
+ 800059c:	681b      	ldr	r3, [r3, #0]
+ 800059e:	4a96      	ldr	r2, [pc, #600]	; (80007f8 <main+0x288>)
+ 80005a0:	f023 0302 	bic.w	r3, r3, #2
+ 80005a4:	6013      	str	r3, [r2, #0]
   GPIOA->MODER &= ~(1 << (0*2));
- 80005a2:	4b94      	ldr	r3, [pc, #592]	; (80007f4 <main+0x288>)
- 80005a4:	681b      	ldr	r3, [r3, #0]
- 80005a6:	4a93      	ldr	r2, [pc, #588]	; (80007f4 <main+0x288>)
- 80005a8:	f023 0301 	bic.w	r3, r3, #1
- 80005ac:	6013      	str	r3, [r2, #0]
+ 80005a6:	4b94      	ldr	r3, [pc, #592]	; (80007f8 <main+0x288>)
+ 80005a8:	681b      	ldr	r3, [r3, #0]
+ 80005aa:	4a93      	ldr	r2, [pc, #588]	; (80007f8 <main+0x288>)
+ 80005ac:	f023 0301 	bic.w	r3, r3, #1
+ 80005b0:	6013      	str	r3, [r2, #0]
   //EXTI0
   EXTI->RTSR |= BIT_0; // Enables rising edge in EXTI0
- 80005ae:	4b92      	ldr	r3, [pc, #584]	; (80007f8 <main+0x28c>)
- 80005b0:	689b      	ldr	r3, [r3, #8]
- 80005b2:	4a91      	ldr	r2, [pc, #580]	; (80007f8 <main+0x28c>)
- 80005b4:	f043 0301 	orr.w	r3, r3, #1
- 80005b8:	6093      	str	r3, [r2, #8]
+ 80005b2:	4b92      	ldr	r3, [pc, #584]	; (80007fc <main+0x28c>)
+ 80005b4:	689b      	ldr	r3, [r3, #8]
+ 80005b6:	4a91      	ldr	r2, [pc, #580]	; (80007fc <main+0x28c>)
+ 80005b8:	f043 0301 	orr.w	r3, r3, #1
+ 80005bc:	6093      	str	r3, [r2, #8]
   EXTI->FTSR &= ~(BIT_0); // Disables falling edge in EXTI0
- 80005ba:	4b8f      	ldr	r3, [pc, #572]	; (80007f8 <main+0x28c>)
- 80005bc:	68db      	ldr	r3, [r3, #12]
- 80005be:	4a8e      	ldr	r2, [pc, #568]	; (80007f8 <main+0x28c>)
- 80005c0:	f023 0301 	bic.w	r3, r3, #1
- 80005c4:	60d3      	str	r3, [r2, #12]
+ 80005be:	4b8f      	ldr	r3, [pc, #572]	; (80007fc <main+0x28c>)
+ 80005c0:	68db      	ldr	r3, [r3, #12]
+ 80005c2:	4a8e      	ldr	r2, [pc, #568]	; (80007fc <main+0x28c>)
+ 80005c4:	f023 0301 	bic.w	r3, r3, #1
+ 80005c8:	60d3      	str	r3, [r2, #12]
   SYSCFG->EXTICR[0] = 0000; // Linking EXTI0 to GPIOA (USER BUTTON = PA0) - all zeros mean GPIOA
- 80005c6:	4b8d      	ldr	r3, [pc, #564]	; (80007fc <main+0x290>)
- 80005c8:	2200      	movs	r2, #0
- 80005ca:	609a      	str	r2, [r3, #8]
+ 80005ca:	4b8d      	ldr	r3, [pc, #564]	; (8000800 <main+0x290>)
+ 80005cc:	2200      	movs	r2, #0
+ 80005ce:	609a      	str	r2, [r3, #8]
   EXTI->IMR |= BIT_0; // Enables the Interrupt (i.e. the event) (IMR = Interrupt Mask Register)
- 80005cc:	4b8a      	ldr	r3, [pc, #552]	; (80007f8 <main+0x28c>)
- 80005ce:	681b      	ldr	r3, [r3, #0]
- 80005d0:	4a89      	ldr	r2, [pc, #548]	; (80007f8 <main+0x28c>)
- 80005d2:	f043 0301 	orr.w	r3, r3, #1
- 80005d6:	6013      	str	r3, [r2, #0]
+ 80005d0:	4b8a      	ldr	r3, [pc, #552]	; (80007fc <main+0x28c>)
+ 80005d2:	681b      	ldr	r3, [r3, #0]
+ 80005d4:	4a89      	ldr	r2, [pc, #548]	; (80007fc <main+0x28c>)
+ 80005d6:	f043 0301 	orr.w	r3, r3, #1
+ 80005da:	6013      	str	r3, [r2, #0]
   NVIC->ISER[0] |= (1 << 6); //Enables EXTI0 in NVIC (pos 6)
- 80005d8:	4b89      	ldr	r3, [pc, #548]	; (8000800 <main+0x294>)
- 80005da:	681b      	ldr	r3, [r3, #0]
- 80005dc:	4a88      	ldr	r2, [pc, #544]	; (8000800 <main+0x294>)
- 80005de:	f043 0340 	orr.w	r3, r3, #64	; 0x40
- 80005e2:	6013      	str	r3, [r2, #0]
+ 80005dc:	4b89      	ldr	r3, [pc, #548]	; (8000804 <main+0x294>)
+ 80005de:	681b      	ldr	r3, [r3, #0]
+ 80005e0:	4a88      	ldr	r2, [pc, #544]	; (8000804 <main+0x294>)
+ 80005e2:	f043 0340 	orr.w	r3, r3, #64	; 0x40
+ 80005e6:	6013      	str	r3, [r2, #0]
 
   //USING UNUSED I/O PINS 11 and 12
   //PA11 (BUTTON 1) - digital input (00)
   GPIOA->MODER &= ~(1 << (11*2 + 1));
- 80005e4:	4b83      	ldr	r3, [pc, #524]	; (80007f4 <main+0x288>)
- 80005e6:	681b      	ldr	r3, [r3, #0]
- 80005e8:	4a82      	ldr	r2, [pc, #520]	; (80007f4 <main+0x288>)
- 80005ea:	f423 0300 	bic.w	r3, r3, #8388608	; 0x800000
- 80005ee:	6013      	str	r3, [r2, #0]
+ 80005e8:	4b83      	ldr	r3, [pc, #524]	; (80007f8 <main+0x288>)
+ 80005ea:	681b      	ldr	r3, [r3, #0]
+ 80005ec:	4a82      	ldr	r2, [pc, #520]	; (80007f8 <main+0x288>)
+ 80005ee:	f423 0300 	bic.w	r3, r3, #8388608	; 0x800000
+ 80005f2:	6013      	str	r3, [r2, #0]
   GPIOA->MODER &= ~(1 << (11*2));
- 80005f0:	4b80      	ldr	r3, [pc, #512]	; (80007f4 <main+0x288>)
- 80005f2:	681b      	ldr	r3, [r3, #0]
- 80005f4:	4a7f      	ldr	r2, [pc, #508]	; (80007f4 <main+0x288>)
- 80005f6:	f423 0380 	bic.w	r3, r3, #4194304	; 0x400000
- 80005fa:	6013      	str	r3, [r2, #0]
+ 80005f4:	4b80      	ldr	r3, [pc, #512]	; (80007f8 <main+0x288>)
+ 80005f6:	681b      	ldr	r3, [r3, #0]
+ 80005f8:	4a7f      	ldr	r2, [pc, #508]	; (80007f8 <main+0x288>)
+ 80005fa:	f423 0380 	bic.w	r3, r3, #4194304	; 0x400000
+ 80005fe:	6013      	str	r3, [r2, #0]
   //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ????
   //Pull-Up: should be a constant 0, unless we press, then it should change to a 1
   //Set up with pull-up resistor (01)
   GPIOA->PUPDR &= ~(1 << (11*2 + 1));
- 80005fc:	4b7d      	ldr	r3, [pc, #500]	; (80007f4 <main+0x288>)
- 80005fe:	68db      	ldr	r3, [r3, #12]
- 8000600:	4a7c      	ldr	r2, [pc, #496]	; (80007f4 <main+0x288>)
- 8000602:	f423 0300 	bic.w	r3, r3, #8388608	; 0x800000
- 8000606:	60d3      	str	r3, [r2, #12]
+ 8000600:	4b7d      	ldr	r3, [pc, #500]	; (80007f8 <main+0x288>)
+ 8000602:	68db      	ldr	r3, [r3, #12]
+ 8000604:	4a7c      	ldr	r2, [pc, #496]	; (80007f8 <main+0x288>)
+ 8000606:	f423 0300 	bic.w	r3, r3, #8388608	; 0x800000
+ 800060a:	60d3      	str	r3, [r2, #12]
   GPIOA->PUPDR |= (1 << (11*2));
- 8000608:	4b7a      	ldr	r3, [pc, #488]	; (80007f4 <main+0x288>)
- 800060a:	68db      	ldr	r3, [r3, #12]
- 800060c:	4a79      	ldr	r2, [pc, #484]	; (80007f4 <main+0x288>)
- 800060e:	f443 0380 	orr.w	r3, r3, #4194304	; 0x400000
- 8000612:	60d3      	str	r3, [r2, #12]
+ 800060c:	4b7a      	ldr	r3, [pc, #488]	; (80007f8 <main+0x288>)
+ 800060e:	68db      	ldr	r3, [r3, #12]
+ 8000610:	4a79      	ldr	r2, [pc, #484]	; (80007f8 <main+0x288>)
+ 8000612:	f443 0380 	orr.w	r3, r3, #4194304	; 0x400000
+ 8000616:	60d3      	str	r3, [r2, #12]
   //EXTI1
-  EXTI->IMR |= BIT_2; // Enables the interrupt
- 8000614:	4b78      	ldr	r3, [pc, #480]	; (80007f8 <main+0x28c>)
- 8000616:	681b      	ldr	r3, [r3, #0]
- 8000618:	4a77      	ldr	r2, [pc, #476]	; (80007f8 <main+0x28c>)
- 800061a:	f043 0304 	orr.w	r3, r3, #4
- 800061e:	6013      	str	r3, [r2, #0]
   EXTI->RTSR |= BIT_2; // Enables rising edge in EXTI1
- 8000620:	4b75      	ldr	r3, [pc, #468]	; (80007f8 <main+0x28c>)
- 8000622:	689b      	ldr	r3, [r3, #8]
- 8000624:	4a74      	ldr	r2, [pc, #464]	; (80007f8 <main+0x28c>)
- 8000626:	f043 0304 	orr.w	r3, r3, #4
- 800062a:	6093      	str	r3, [r2, #8]
+ 8000618:	4b78      	ldr	r3, [pc, #480]	; (80007fc <main+0x28c>)
+ 800061a:	689b      	ldr	r3, [r3, #8]
+ 800061c:	4a77      	ldr	r2, [pc, #476]	; (80007fc <main+0x28c>)
+ 800061e:	f043 0304 	orr.w	r3, r3, #4
+ 8000622:	6093      	str	r3, [r2, #8]
   EXTI->FTSR &= ~(BIT_2); // Disables falling edge in EXTI1
- 800062c:	4b72      	ldr	r3, [pc, #456]	; (80007f8 <main+0x28c>)
- 800062e:	68db      	ldr	r3, [r3, #12]
- 8000630:	4a71      	ldr	r2, [pc, #452]	; (80007f8 <main+0x28c>)
- 8000632:	f023 0304 	bic.w	r3, r3, #4
- 8000636:	60d3      	str	r3, [r2, #12]
+ 8000624:	4b75      	ldr	r3, [pc, #468]	; (80007fc <main+0x28c>)
+ 8000626:	68db      	ldr	r3, [r3, #12]
+ 8000628:	4a74      	ldr	r2, [pc, #464]	; (80007fc <main+0x28c>)
+ 800062a:	f023 0304 	bic.w	r3, r3, #4
+ 800062e:	60d3      	str	r3, [r2, #12]
   SYSCFG->EXTICR[2] = 0000; // Linking EXTI2 to GPIOA (BUTTON 1 = PA11)
- 8000638:	4b70      	ldr	r3, [pc, #448]	; (80007fc <main+0x290>)
- 800063a:	2200      	movs	r2, #0
- 800063c:	611a      	str	r2, [r3, #16]
+ 8000630:	4b73      	ldr	r3, [pc, #460]	; (8000800 <main+0x290>)
+ 8000632:	2200      	movs	r2, #0
+ 8000634:	611a      	str	r2, [r3, #16]
+  EXTI->IMR |= BIT_2; // Enables the interrupt
+ 8000636:	4b71      	ldr	r3, [pc, #452]	; (80007fc <main+0x28c>)
+ 8000638:	681b      	ldr	r3, [r3, #0]
+ 800063a:	4a70      	ldr	r2, [pc, #448]	; (80007fc <main+0x28c>)
+ 800063c:	f043 0304 	orr.w	r3, r3, #4
+ 8000640:	6013      	str	r3, [r2, #0]
   NVIC->ISER[0] |= (1 << 7); // EXTI1 has pos 7
- 800063e:	4b70      	ldr	r3, [pc, #448]	; (8000800 <main+0x294>)
- 8000640:	681b      	ldr	r3, [r3, #0]
- 8000642:	4a6f      	ldr	r2, [pc, #444]	; (8000800 <main+0x294>)
- 8000644:	f043 0380 	orr.w	r3, r3, #128	; 0x80
- 8000648:	6013      	str	r3, [r2, #0]
+ 8000642:	4b70      	ldr	r3, [pc, #448]	; (8000804 <main+0x294>)
+ 8000644:	681b      	ldr	r3, [r3, #0]
+ 8000646:	4a6f      	ldr	r2, [pc, #444]	; (8000804 <main+0x294>)
+ 8000648:	f043 0380 	orr.w	r3, r3, #128	; 0x80
+ 800064c:	6013      	str	r3, [r2, #0]
 
   //PA12 (BUTTON 2) - digital input (00)
   GPIOA->MODER &= ~(1 << (12*2 + 1));
- 800064a:	4b6a      	ldr	r3, [pc, #424]	; (80007f4 <main+0x288>)
- 800064c:	681b      	ldr	r3, [r3, #0]
- 800064e:	4a69      	ldr	r2, [pc, #420]	; (80007f4 <main+0x288>)
- 8000650:	f023 7300 	bic.w	r3, r3, #33554432	; 0x2000000
- 8000654:	6013      	str	r3, [r2, #0]
+ 800064e:	4b6a      	ldr	r3, [pc, #424]	; (80007f8 <main+0x288>)
+ 8000650:	681b      	ldr	r3, [r3, #0]
+ 8000652:	4a69      	ldr	r2, [pc, #420]	; (80007f8 <main+0x288>)
+ 8000654:	f023 7300 	bic.w	r3, r3, #33554432	; 0x2000000
+ 8000658:	6013      	str	r3, [r2, #0]
   GPIOA->MODER &= ~(1 << (12*2));
- 8000656:	4b67      	ldr	r3, [pc, #412]	; (80007f4 <main+0x288>)
- 8000658:	681b      	ldr	r3, [r3, #0]
- 800065a:	4a66      	ldr	r2, [pc, #408]	; (80007f4 <main+0x288>)
- 800065c:	f023 7380 	bic.w	r3, r3, #16777216	; 0x1000000
- 8000660:	6013      	str	r3, [r2, #0]
+ 800065a:	4b67      	ldr	r3, [pc, #412]	; (80007f8 <main+0x288>)
+ 800065c:	681b      	ldr	r3, [r3, #0]
+ 800065e:	4a66      	ldr	r2, [pc, #408]	; (80007f8 <main+0x288>)
+ 8000660:	f023 7380 	bic.w	r3, r3, #16777216	; 0x1000000
+ 8000664:	6013      	str	r3, [r2, #0]
   //Set up with pull-up resistor (01)
   GPIOA->PUPDR &= ~(1 << (12*2 + 1));
- 8000662:	4b64      	ldr	r3, [pc, #400]	; (80007f4 <main+0x288>)
- 8000664:	68db      	ldr	r3, [r3, #12]
- 8000666:	4a63      	ldr	r2, [pc, #396]	; (80007f4 <main+0x288>)
- 8000668:	f023 7300 	bic.w	r3, r3, #33554432	; 0x2000000
- 800066c:	60d3      	str	r3, [r2, #12]
+ 8000666:	4b64      	ldr	r3, [pc, #400]	; (80007f8 <main+0x288>)
+ 8000668:	68db      	ldr	r3, [r3, #12]
+ 800066a:	4a63      	ldr	r2, [pc, #396]	; (80007f8 <main+0x288>)
+ 800066c:	f023 7300 	bic.w	r3, r3, #33554432	; 0x2000000
+ 8000670:	60d3      	str	r3, [r2, #12]
   GPIOA->PUPDR |= (1 << (12*2));
- 800066e:	4b61      	ldr	r3, [pc, #388]	; (80007f4 <main+0x288>)
- 8000670:	68db      	ldr	r3, [r3, #12]
- 8000672:	4a60      	ldr	r2, [pc, #384]	; (80007f4 <main+0x288>)
- 8000674:	f043 7380 	orr.w	r3, r3, #16777216	; 0x1000000
- 8000678:	60d3      	str	r3, [r2, #12]
+ 8000672:	4b61      	ldr	r3, [pc, #388]	; (80007f8 <main+0x288>)
+ 8000674:	68db      	ldr	r3, [r3, #12]
+ 8000676:	4a60      	ldr	r2, [pc, #384]	; (80007f8 <main+0x288>)
+ 8000678:	f043 7380 	orr.w	r3, r3, #16777216	; 0x1000000
+ 800067c:	60d3      	str	r3, [r2, #12]
   //EXTI2
-  EXTI->IMR |= BIT_3; // Enables the interrupt
- 800067a:	4b5f      	ldr	r3, [pc, #380]	; (80007f8 <main+0x28c>)
- 800067c:	681b      	ldr	r3, [r3, #0]
- 800067e:	4a5e      	ldr	r2, [pc, #376]	; (80007f8 <main+0x28c>)
- 8000680:	f043 0308 	orr.w	r3, r3, #8
- 8000684:	6013      	str	r3, [r2, #0]
-  EXTI->RTSR |= BIT_3; // Enables rising edge in EXTI2
- 8000686:	4b5c      	ldr	r3, [pc, #368]	; (80007f8 <main+0x28c>)
- 8000688:	689b      	ldr	r3, [r3, #8]
- 800068a:	4a5b      	ldr	r2, [pc, #364]	; (80007f8 <main+0x28c>)
- 800068c:	f043 0308 	orr.w	r3, r3, #8
- 8000690:	6093      	str	r3, [r2, #8]
-  EXTI->FTSR &= ~(BIT_3); // Disables falling edge in EXTI2
- 8000692:	4b59      	ldr	r3, [pc, #356]	; (80007f8 <main+0x28c>)
- 8000694:	68db      	ldr	r3, [r3, #12]
- 8000696:	4a58      	ldr	r2, [pc, #352]	; (80007f8 <main+0x28c>)
- 8000698:	f023 0308 	bic.w	r3, r3, #8
- 800069c:	60d3      	str	r3, [r2, #12]
+  EXTI->RTSR &= ~(BIT_3); // Enables rising edge in EXTI2
+ 800067e:	4b5f      	ldr	r3, [pc, #380]	; (80007fc <main+0x28c>)
+ 8000680:	689b      	ldr	r3, [r3, #8]
+ 8000682:	4a5e      	ldr	r2, [pc, #376]	; (80007fc <main+0x28c>)
+ 8000684:	f023 0308 	bic.w	r3, r3, #8
+ 8000688:	6093      	str	r3, [r2, #8]
+  EXTI->FTSR |= (BIT_3); // Disables falling edge in EXTI2
+ 800068a:	4b5c      	ldr	r3, [pc, #368]	; (80007fc <main+0x28c>)
+ 800068c:	68db      	ldr	r3, [r3, #12]
+ 800068e:	4a5b      	ldr	r2, [pc, #364]	; (80007fc <main+0x28c>)
+ 8000690:	f043 0308 	orr.w	r3, r3, #8
+ 8000694:	60d3      	str	r3, [r2, #12]
   SYSCFG->EXTICR[3] = 0000; // Linking EXTI3 to GPIOA (BUTTON 2 = PA12)
- 800069e:	4b57      	ldr	r3, [pc, #348]	; (80007fc <main+0x290>)
- 80006a0:	2200      	movs	r2, #0
- 80006a2:	615a      	str	r2, [r3, #20]
+ 8000696:	4b5a      	ldr	r3, [pc, #360]	; (8000800 <main+0x290>)
+ 8000698:	2200      	movs	r2, #0
+ 800069a:	615a      	str	r2, [r3, #20]
+  EXTI->IMR |= BIT_3; // Enables the interrupt
+ 800069c:	4b57      	ldr	r3, [pc, #348]	; (80007fc <main+0x28c>)
+ 800069e:	681b      	ldr	r3, [r3, #0]
+ 80006a0:	4a56      	ldr	r2, [pc, #344]	; (80007fc <main+0x28c>)
+ 80006a2:	f043 0308 	orr.w	r3, r3, #8
+ 80006a6:	6013      	str	r3, [r2, #0]
   NVIC->ISER[0] |= (1 << 8); // EXTI3 has pos 8
- 80006a4:	4b56      	ldr	r3, [pc, #344]	; (8000800 <main+0x294>)
- 80006a6:	681b      	ldr	r3, [r3, #0]
- 80006a8:	4a55      	ldr	r2, [pc, #340]	; (8000800 <main+0x294>)
- 80006aa:	f443 7380 	orr.w	r3, r3, #256	; 0x100
- 80006ae:	6013      	str	r3, [r2, #0]
+ 80006a8:	4b56      	ldr	r3, [pc, #344]	; (8000804 <main+0x294>)
+ 80006aa:	681b      	ldr	r3, [r3, #0]
+ 80006ac:	4a55      	ldr	r2, [pc, #340]	; (8000804 <main+0x294>)
+ 80006ae:	f443 7380 	orr.w	r3, r3, #256	; 0x100
+ 80006b2:	6013      	str	r3, [r2, #0]
 /*
 */
   //LEDs
   //PB6 (BLUE LED) - digital output (01) - ERROR LED
   GPIOB->MODER &= ~(1 << (6*2 + 1));
- 80006b0:	4b54      	ldr	r3, [pc, #336]	; (8000804 <main+0x298>)
- 80006b2:	681b      	ldr	r3, [r3, #0]
- 80006b4:	4a53      	ldr	r2, [pc, #332]	; (8000804 <main+0x298>)
- 80006b6:	f423 5300 	bic.w	r3, r3, #8192	; 0x2000
- 80006ba:	6013      	str	r3, [r2, #0]
+ 80006b4:	4b54      	ldr	r3, [pc, #336]	; (8000808 <main+0x298>)
+ 80006b6:	681b      	ldr	r3, [r3, #0]
+ 80006b8:	4a53      	ldr	r2, [pc, #332]	; (8000808 <main+0x298>)
+ 80006ba:	f423 5300 	bic.w	r3, r3, #8192	; 0x2000
+ 80006be:	6013      	str	r3, [r2, #0]
   GPIOB->MODER |= (1 << (6*2));
- 80006bc:	4b51      	ldr	r3, [pc, #324]	; (8000804 <main+0x298>)
- 80006be:	681b      	ldr	r3, [r3, #0]
- 80006c0:	4a50      	ldr	r2, [pc, #320]	; (8000804 <main+0x298>)
- 80006c2:	f443 5380 	orr.w	r3, r3, #4096	; 0x1000
- 80006c6:	6013      	str	r3, [r2, #0]
+ 80006c0:	4b51      	ldr	r3, [pc, #324]	; (8000808 <main+0x298>)
+ 80006c2:	681b      	ldr	r3, [r3, #0]
+ 80006c4:	4a50      	ldr	r2, [pc, #320]	; (8000808 <main+0x298>)
+ 80006c6:	f443 5380 	orr.w	r3, r3, #4096	; 0x1000
+ 80006ca:	6013      	str	r3, [r2, #0]
   //PB7 (GREEN LED) - digital output (01)
   GPIOB->MODER &= ~(1 << (7*2 + 1));
- 80006c8:	4b4e      	ldr	r3, [pc, #312]	; (8000804 <main+0x298>)
- 80006ca:	681b      	ldr	r3, [r3, #0]
- 80006cc:	4a4d      	ldr	r2, [pc, #308]	; (8000804 <main+0x298>)
- 80006ce:	f423 4300 	bic.w	r3, r3, #32768	; 0x8000
- 80006d2:	6013      	str	r3, [r2, #0]
+ 80006cc:	4b4e      	ldr	r3, [pc, #312]	; (8000808 <main+0x298>)
+ 80006ce:	681b      	ldr	r3, [r3, #0]
+ 80006d0:	4a4d      	ldr	r2, [pc, #308]	; (8000808 <main+0x298>)
+ 80006d2:	f423 4300 	bic.w	r3, r3, #32768	; 0x8000
+ 80006d6:	6013      	str	r3, [r2, #0]
   GPIOB->MODER |= (1 << (7*2));
- 80006d4:	4b4b      	ldr	r3, [pc, #300]	; (8000804 <main+0x298>)
- 80006d6:	681b      	ldr	r3, [r3, #0]
- 80006d8:	4a4a      	ldr	r2, [pc, #296]	; (8000804 <main+0x298>)
- 80006da:	f443 4380 	orr.w	r3, r3, #16384	; 0x4000
- 80006de:	6013      	str	r3, [r2, #0]
+ 80006d8:	4b4b      	ldr	r3, [pc, #300]	; (8000808 <main+0x298>)
+ 80006da:	681b      	ldr	r3, [r3, #0]
+ 80006dc:	4a4a      	ldr	r2, [pc, #296]	; (8000808 <main+0x298>)
+ 80006de:	f443 4380 	orr.w	r3, r3, #16384	; 0x4000
+ 80006e2:	6013      	str	r3, [r2, #0]
   {
     //display GAME 1 (initially) --> DONE IN GLOBAL VAR DECLARATION
     //if USER BUTTON is pressed, change to GAME 2 (at ANY time - use interrupts)
     //else wait predetermined time and start (use espera() function)
 
     switch(game)
- 80006e0:	4b49      	ldr	r3, [pc, #292]	; (8000808 <main+0x29c>)
- 80006e2:	681b      	ldr	r3, [r3, #0]
- 80006e4:	2b01      	cmp	r3, #1
- 80006e6:	d002      	beq.n	80006ee <main+0x182>
- 80006e8:	2b02      	cmp	r3, #2
- 80006ea:	d069      	beq.n	80007c0 <main+0x254>
- 80006ec:	e06c      	b.n	80007c8 <main+0x25c>
+ 80006e4:	4b49      	ldr	r3, [pc, #292]	; (800080c <main+0x29c>)
+ 80006e6:	681b      	ldr	r3, [r3, #0]
+ 80006e8:	2b01      	cmp	r3, #1
+ 80006ea:	d002      	beq.n	80006f2 <main+0x182>
+ 80006ec:	2b02      	cmp	r3, #2
+ 80006ee:	d069      	beq.n	80007c4 <main+0x254>
+ 80006f0:	e06c      	b.n	80007cc <main+0x25c>
     {
       case 1: // GAME 1
         while (1)
         {
           if (change_game == 1)
- 80006ee:	4b47      	ldr	r3, [pc, #284]	; (800080c <main+0x2a0>)
- 80006f0:	681b      	ldr	r3, [r3, #0]
- 80006f2:	2b01      	cmp	r3, #1
- 80006f4:	d10c      	bne.n	8000710 <main+0x1a4>
+ 80006f2:	4b47      	ldr	r3, [pc, #284]	; (8000810 <main+0x2a0>)
+ 80006f4:	681b      	ldr	r3, [r3, #0]
+ 80006f6:	2b01      	cmp	r3, #1
+ 80006f8:	d10c      	bne.n	8000714 <main+0x1a4>
           {
             //FIXME: delete below
             BSP_LCD_GLASS_Clear();
- 80006f6:	f000 fe7f 	bl	80013f8 <BSP_LCD_GLASS_Clear>
+ 80006fa:	f000 fe7d 	bl	80013f8 <BSP_LCD_GLASS_Clear>
             BSP_LCD_GLASS_DisplayString((uint8_t*)" SWAP");
- 80006fa:	4845      	ldr	r0, [pc, #276]	; (8000810 <main+0x2a4>)
- 80006fc:	f000 fe52 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
+ 80006fe:	4845      	ldr	r0, [pc, #276]	; (8000814 <main+0x2a4>)
+ 8000700:	f000 fe50 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
             espera(sec);
- 8000700:	4844      	ldr	r0, [pc, #272]	; (8000814 <main+0x2a8>)
- 8000702:	f7ff febf 	bl	8000484 <espera>
+ 8000704:	4844      	ldr	r0, [pc, #272]	; (8000818 <main+0x2a8>)
+ 8000706:	f7ff febd 	bl	8000484 <espera>
             //
             change_game = 0;
- 8000706:	4b41      	ldr	r3, [pc, #260]	; (800080c <main+0x2a0>)
- 8000708:	2200      	movs	r2, #0
- 800070a:	601a      	str	r2, [r3, #0]
+ 800070a:	4b41      	ldr	r3, [pc, #260]	; (8000810 <main+0x2a0>)
+ 800070c:	2200      	movs	r2, #0
+ 800070e:	601a      	str	r2, [r3, #0]
             break;
- 800070c:	bf00      	nop
+ 8000710:	bf00      	nop
               GPIOB->BSRR = (1<<6) << 16; //BLUE OFF
               break;
             }
           }
         }
       break;
- 800070e:	e070      	b.n	80007f2 <main+0x286>
+ 8000712:	e070      	b.n	80007f6 <main+0x286>
           BSP_LCD_GLASS_Clear();
- 8000710:	f000 fe72 	bl	80013f8 <BSP_LCD_GLASS_Clear>
+ 8000714:	f000 fe70 	bl	80013f8 <BSP_LCD_GLASS_Clear>
           BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
- 8000714:	4840      	ldr	r0, [pc, #256]	; (8000818 <main+0x2ac>)
- 8000716:	f000 fe45 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
+ 8000718:	4840      	ldr	r0, [pc, #256]	; (800081c <main+0x2ac>)
+ 800071a:	f000 fe43 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
           espera(2*sec);
- 800071a:	4840      	ldr	r0, [pc, #256]	; (800081c <main+0x2b0>)
- 800071c:	f7ff feb2 	bl	8000484 <espera>
+ 800071e:	4840      	ldr	r0, [pc, #256]	; (8000820 <main+0x2b0>)
+ 8000720:	f7ff feb0 	bl	8000484 <espera>
           BSP_LCD_GLASS_Clear(); //Clear LCD
- 8000720:	f000 fe6a 	bl	80013f8 <BSP_LCD_GLASS_Clear>
+ 8000724:	f000 fe68 	bl	80013f8 <BSP_LCD_GLASS_Clear>
           BSP_LCD_GLASS_DisplayString((uint8_t*)" READY");
- 8000724:	483e      	ldr	r0, [pc, #248]	; (8000820 <main+0x2b4>)
- 8000726:	f000 fe3d 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
+ 8000728:	483e      	ldr	r0, [pc, #248]	; (8000824 <main+0x2b4>)
+ 800072a:	f000 fe3b 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
           espera(2*sec);
- 800072a:	483c      	ldr	r0, [pc, #240]	; (800081c <main+0x2b0>)
- 800072c:	f7ff feaa 	bl	8000484 <espera>
+ 800072e:	483c      	ldr	r0, [pc, #240]	; (8000820 <main+0x2b0>)
+ 8000730:	f7ff fea8 	bl	8000484 <espera>
           BSP_LCD_GLASS_Clear();
- 8000730:	f000 fe62 	bl	80013f8 <BSP_LCD_GLASS_Clear>
+ 8000734:	f000 fe60 	bl	80013f8 <BSP_LCD_GLASS_Clear>
           GPIOB->BSRR = (1<<7); //GREEN LED ON
- 8000734:	4b33      	ldr	r3, [pc, #204]	; (8000804 <main+0x298>)
- 8000736:	2280      	movs	r2, #128	; 0x80
- 8000738:	619a      	str	r2, [r3, #24]
+ 8000738:	4b33      	ldr	r3, [pc, #204]	; (8000808 <main+0x298>)
+ 800073a:	2280      	movs	r2, #128	; 0x80
+ 800073c:	619a      	str	r2, [r3, #24]
             if (change_game == 1)
- 800073a:	4b34      	ldr	r3, [pc, #208]	; (800080c <main+0x2a0>)
- 800073c:	681b      	ldr	r3, [r3, #0]
- 800073e:	2b01      	cmp	r3, #1
- 8000740:	d10c      	bne.n	800075c <main+0x1f0>
+ 800073e:	4b34      	ldr	r3, [pc, #208]	; (8000810 <main+0x2a0>)
+ 8000740:	681b      	ldr	r3, [r3, #0]
+ 8000742:	2b01      	cmp	r3, #1
+ 8000744:	d10c      	bne.n	8000760 <main+0x1f0>
               BSP_LCD_GLASS_Clear();
- 8000742:	f000 fe59 	bl	80013f8 <BSP_LCD_GLASS_Clear>
+ 8000746:	f000 fe57 	bl	80013f8 <BSP_LCD_GLASS_Clear>
               BSP_LCD_GLASS_DisplayString((uint8_t*)" SWAP");
- 8000746:	4832      	ldr	r0, [pc, #200]	; (8000810 <main+0x2a4>)
- 8000748:	f000 fe2c 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
+ 800074a:	4832      	ldr	r0, [pc, #200]	; (8000814 <main+0x2a4>)
+ 800074c:	f000 fe2a 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
               espera(sec);
- 800074c:	4831      	ldr	r0, [pc, #196]	; (8000814 <main+0x2a8>)
- 800074e:	f7ff fe99 	bl	8000484 <espera>
+ 8000750:	4831      	ldr	r0, [pc, #196]	; (8000818 <main+0x2a8>)
+ 8000752:	f7ff fe97 	bl	8000484 <espera>
               GPIOB->BSRR = (1<<7) << 16; //G LED OFF - doesnt make any sense in GAME2              break;
- 8000752:	4b2c      	ldr	r3, [pc, #176]	; (8000804 <main+0x298>)
- 8000754:	f44f 0200 	mov.w	r2, #8388608	; 0x800000
- 8000758:	619a      	str	r2, [r3, #24]
+ 8000756:	4b2c      	ldr	r3, [pc, #176]	; (8000808 <main+0x298>)
+ 8000758:	f44f 0200 	mov.w	r2, #8388608	; 0x800000
+ 800075c:	619a      	str	r2, [r3, #24]
               break;
- 800075a:	e030      	b.n	80007be <main+0x252>
+ 800075e:	e030      	b.n	80007c2 <main+0x252>
             if(/* (EXTI->PR&BIT_2) == 0 */ (GPIOA->IDR&0x800) == 0 ) //button 1 pressed? PA11=1?
- 800075c:	4b25      	ldr	r3, [pc, #148]	; (80007f4 <main+0x288>)
- 800075e:	691b      	ldr	r3, [r3, #16]
- 8000760:	f403 6300 	and.w	r3, r3, #2048	; 0x800
- 8000764:	2b00      	cmp	r3, #0
- 8000766:	d113      	bne.n	8000790 <main+0x224>
+ 8000760:	4b25      	ldr	r3, [pc, #148]	; (80007f8 <main+0x288>)
+ 8000762:	691b      	ldr	r3, [r3, #16]
+ 8000764:	f403 6300 	and.w	r3, r3, #2048	; 0x800
+ 8000768:	2b00      	cmp	r3, #0
+ 800076a:	d113      	bne.n	8000794 <main+0x224>
               GPIOB->BSRR = (1<<7) << 16; //GREEN LED OFF
- 8000768:	4b26      	ldr	r3, [pc, #152]	; (8000804 <main+0x298>)
- 800076a:	f44f 0200 	mov.w	r2, #8388608	; 0x800000
- 800076e:	619a      	str	r2, [r3, #24]
+ 800076c:	4b26      	ldr	r3, [pc, #152]	; (8000808 <main+0x298>)
+ 800076e:	f44f 0200 	mov.w	r2, #8388608	; 0x800000
+ 8000772:	619a      	str	r2, [r3, #24]
               GPIOB->BSRR = (1<<6); //BLUE LED ON - Signaling a win (IRQ Worked)
- 8000770:	4b24      	ldr	r3, [pc, #144]	; (8000804 <main+0x298>)
- 8000772:	2240      	movs	r2, #64	; 0x40
- 8000774:	619a      	str	r2, [r3, #24]
+ 8000774:	4b24      	ldr	r3, [pc, #144]	; (8000808 <main+0x298>)
+ 8000776:	2240      	movs	r2, #64	; 0x40
+ 8000778:	619a      	str	r2, [r3, #24]
               BSP_LCD_GLASS_Clear(); //Clear LCD
- 8000776:	f000 fe3f 	bl	80013f8 <BSP_LCD_GLASS_Clear>
+ 800077a:	f000 fe3d 	bl	80013f8 <BSP_LCD_GLASS_Clear>
               BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W"); //LCD “ON”
- 800077a:	482a      	ldr	r0, [pc, #168]	; (8000824 <main+0x2b8>)
- 800077c:	f000 fe12 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
+ 800077e:	482a      	ldr	r0, [pc, #168]	; (8000828 <main+0x2b8>)
+ 8000780:	f000 fe10 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
               espera(2*sec);
- 8000780:	4826      	ldr	r0, [pc, #152]	; (800081c <main+0x2b0>)
- 8000782:	f7ff fe7f 	bl	8000484 <espera>
+ 8000784:	4826      	ldr	r0, [pc, #152]	; (8000820 <main+0x2b0>)
+ 8000786:	f7ff fe7d 	bl	8000484 <espera>
               GPIOB->BSRR = (1<<6) << 16; //BLUE OFF
- 8000786:	4b1f      	ldr	r3, [pc, #124]	; (8000804 <main+0x298>)
- 8000788:	f44f 0280 	mov.w	r2, #4194304	; 0x400000
- 800078c:	619a      	str	r2, [r3, #24]
+ 800078a:	4b1f      	ldr	r3, [pc, #124]	; (8000808 <main+0x298>)
+ 800078c:	f44f 0280 	mov.w	r2, #4194304	; 0x400000
+ 8000790:	619a      	str	r2, [r3, #24]
               break;
- 800078e:	e016      	b.n	80007be <main+0x252>
-            if( winner == 2 /* (GPIOA->IDR&0x1000) == 0 */) //button 2 pressed? PA12=1?
- 8000790:	4b25      	ldr	r3, [pc, #148]	; (8000828 <main+0x2bc>)
- 8000792:	681b      	ldr	r3, [r3, #0]
- 8000794:	2b02      	cmp	r3, #2
- 8000796:	d1d0      	bne.n	800073a <main+0x1ce>
+ 8000792:	e016      	b.n	80007c2 <main+0x252>
+            if( EXTI->PR!=0 /* (GPIOA->IDR&0x1000) == 0 */) //button 2 pressed? PA12=1?
+ 8000794:	4b19      	ldr	r3, [pc, #100]	; (80007fc <main+0x28c>)
+ 8000796:	695b      	ldr	r3, [r3, #20]
+ 8000798:	2b00      	cmp	r3, #0
+ 800079a:	d0d0      	beq.n	800073e <main+0x1ce>
               GPIOB->BSRR = (1<<7) << 16; //GREEN LED OFF
- 8000798:	4b1a      	ldr	r3, [pc, #104]	; (8000804 <main+0x298>)
- 800079a:	f44f 0200 	mov.w	r2, #8388608	; 0x800000
- 800079e:	619a      	str	r2, [r3, #24]
+ 800079c:	4b1a      	ldr	r3, [pc, #104]	; (8000808 <main+0x298>)
+ 800079e:	f44f 0200 	mov.w	r2, #8388608	; 0x800000
+ 80007a2:	619a      	str	r2, [r3, #24]
               GPIOB->BSRR = (1<<6); //BLUE LED ON - Signaling a win (IRQ Worked)
- 80007a0:	4b18      	ldr	r3, [pc, #96]	; (8000804 <main+0x298>)
- 80007a2:	2240      	movs	r2, #64	; 0x40
- 80007a4:	619a      	str	r2, [r3, #24]
+ 80007a4:	4b18      	ldr	r3, [pc, #96]	; (8000808 <main+0x298>)
+ 80007a6:	2240      	movs	r2, #64	; 0x40
+ 80007a8:	619a      	str	r2, [r3, #24]
               BSP_LCD_GLASS_Clear(); //Clear LCD - less letters
- 80007a6:	f000 fe27 	bl	80013f8 <BSP_LCD_GLASS_Clear>
+ 80007aa:	f000 fe25 	bl	80013f8 <BSP_LCD_GLASS_Clear>
               BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W"); //LCD “ON”
- 80007aa:	4820      	ldr	r0, [pc, #128]	; (800082c <main+0x2c0>)
- 80007ac:	f000 fdfa 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
+ 80007ae:	481f      	ldr	r0, [pc, #124]	; (800082c <main+0x2bc>)
+ 80007b0:	f000 fdf8 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
               espera(2*sec);
- 80007b0:	481a      	ldr	r0, [pc, #104]	; (800081c <main+0x2b0>)
- 80007b2:	f7ff fe67 	bl	8000484 <espera>
+ 80007b4:	481a      	ldr	r0, [pc, #104]	; (8000820 <main+0x2b0>)
+ 80007b6:	f7ff fe65 	bl	8000484 <espera>
               GPIOB->BSRR = (1<<6) << 16; //BLUE OFF
- 80007b6:	4b13      	ldr	r3, [pc, #76]	; (8000804 <main+0x298>)
- 80007b8:	f44f 0280 	mov.w	r2, #4194304	; 0x400000
- 80007bc:	619a      	str	r2, [r3, #24]
+ 80007ba:	4b13      	ldr	r3, [pc, #76]	; (8000808 <main+0x298>)
+ 80007bc:	f44f 0280 	mov.w	r2, #4194304	; 0x400000
+ 80007c0:	619a      	str	r2, [r3, #24]
           if (change_game == 1)
- 80007be:	e796      	b.n	80006ee <main+0x182>
+ 80007c2:	e796      	b.n	80006f2 <main+0x182>
 
       case 2: // Game 2
         //TODO: Game 2 will be done at a later milestone
         //BSP_LCD_GLASS_Clear();
         BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME2");
- 80007c0:	481b      	ldr	r0, [pc, #108]	; (8000830 <main+0x2c4>)
- 80007c2:	f000 fdef 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
+ 80007c4:	481a      	ldr	r0, [pc, #104]	; (8000830 <main+0x2c0>)
+ 80007c6:	f000 fded 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
         //espera(3*sec);
       break;
- 80007c6:	e014      	b.n	80007f2 <main+0x286>
+ 80007ca:	e014      	b.n	80007f6 <main+0x286>
 
       default:
         GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
- 80007c8:	4b0e      	ldr	r3, [pc, #56]	; (8000804 <main+0x298>)
- 80007ca:	f44f 0200 	mov.w	r2, #8388608	; 0x800000
- 80007ce:	619a      	str	r2, [r3, #24]
+ 80007cc:	4b0e      	ldr	r3, [pc, #56]	; (8000808 <main+0x298>)
+ 80007ce:	f44f 0200 	mov.w	r2, #8388608	; 0x800000
+ 80007d2:	619a      	str	r2, [r3, #24]
         GPIOB->BSRR = (1 << 6); //BLUE LED ON signalling an error
- 80007d0:	4b0c      	ldr	r3, [pc, #48]	; (8000804 <main+0x298>)
- 80007d2:	2240      	movs	r2, #64	; 0x40
- 80007d4:	619a      	str	r2, [r3, #24]
+ 80007d4:	4b0c      	ldr	r3, [pc, #48]	; (8000808 <main+0x298>)
+ 80007d6:	2240      	movs	r2, #64	; 0x40
+ 80007d8:	619a      	str	r2, [r3, #24]
         BSP_LCD_GLASS_Clear();
- 80007d6:	f000 fe0f 	bl	80013f8 <BSP_LCD_GLASS_Clear>
+ 80007da:	f000 fe0d 	bl	80013f8 <BSP_LCD_GLASS_Clear>
         BSP_LCD_GLASS_DisplayString((uint8_t*)" ERROR");
- 80007da:	4816      	ldr	r0, [pc, #88]	; (8000834 <main+0x2c8>)
- 80007dc:	f000 fde2 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
+ 80007de:	4815      	ldr	r0, [pc, #84]	; (8000834 <main+0x2c4>)
+ 80007e0:	f000 fde0 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
         espera(2*sec);
- 80007e0:	480e      	ldr	r0, [pc, #56]	; (800081c <main+0x2b0>)
- 80007e2:	f7ff fe4f 	bl	8000484 <espera>
+ 80007e4:	480e      	ldr	r0, [pc, #56]	; (8000820 <main+0x2b0>)
+ 80007e6:	f7ff fe4d 	bl	8000484 <espera>
         BSP_LCD_GLASS_Clear();
- 80007e6:	f000 fe07 	bl	80013f8 <BSP_LCD_GLASS_Clear>
+ 80007ea:	f000 fe05 	bl	80013f8 <BSP_LCD_GLASS_Clear>
         BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
- 80007ea:	4813      	ldr	r0, [pc, #76]	; (8000838 <main+0x2cc>)
- 80007ec:	f000 fdda 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
+ 80007ee:	4812      	ldr	r0, [pc, #72]	; (8000838 <main+0x2c8>)
+ 80007f0:	f000 fdd8 	bl	80013a4 <BSP_LCD_GLASS_DisplayString>
       break;
- 80007f0:	bf00      	nop
+ 80007f4:	bf00      	nop
     switch(game)
- 80007f2:	e775      	b.n	80006e0 <main+0x174>
- 80007f4:	40020000 	.word	0x40020000
- 80007f8:	40010400 	.word	0x40010400
- 80007fc:	40010000 	.word	0x40010000
- 8000800:	e000e100 	.word	0xe000e100
- 8000804:	40020400 	.word	0x40020400
- 8000808:	20000000 	.word	0x20000000
- 800080c:	200000c0 	.word	0x200000c0
- 8000810:	08003774 	.word	0x08003774
- 8000814:	002625a0 	.word	0x002625a0
- 8000818:	0800377c 	.word	0x0800377c
- 800081c:	004c4b40 	.word	0x004c4b40
- 8000820:	08003784 	.word	0x08003784
- 8000824:	0800378c 	.word	0x0800378c
- 8000828:	200000c4 	.word	0x200000c4
+ 80007f6:	e775      	b.n	80006e4 <main+0x174>
+ 80007f8:	40020000 	.word	0x40020000
+ 80007fc:	40010400 	.word	0x40010400
+ 8000800:	40010000 	.word	0x40010000
+ 8000804:	e000e100 	.word	0xe000e100
+ 8000808:	40020400 	.word	0x40020400
+ 800080c:	20000000 	.word	0x20000000
+ 8000810:	200000c0 	.word	0x200000c0
+ 8000814:	08003774 	.word	0x08003774
+ 8000818:	002625a0 	.word	0x002625a0
+ 800081c:	0800377c 	.word	0x0800377c
+ 8000820:	004c4b40 	.word	0x004c4b40
+ 8000824:	08003784 	.word	0x08003784
+ 8000828:	0800378c 	.word	0x0800378c
  800082c:	08003794 	.word	0x08003794
  8000830:	0800379c 	.word	0x0800379c
  8000834:	080037a4 	.word	0x080037a4
@@ -3790,7 +3792,7 @@ LoopFillZerobss:
  8001a5a:	f001 fe53 	bl	8003704 <__libc_init_array>
 /* Call the application's entry point.*/
   bl main
- 8001a5e:	f7fe fd85 	bl	800056c <main>
+ 8001a5e:	f7fe fd87 	bl	8000570 <main>
   bx lr
  8001a62:	4770      	bx	lr
   ldr r0, =_sdata

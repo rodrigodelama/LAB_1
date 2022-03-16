@@ -76,14 +76,15 @@ void EXTI0_IRQHandler(void)
 {
   if ((EXTI->PR&BIT_0) != 0) // Is EXTI0 flag on? //0000000000000001 in the Pending Register
   {
-	  if (game == 1) game = 2; //If at GAME 1, proceed to GAME 2
-	  else game = 1; //Reset to 1 after requesting change from GAME 2
-	  change_game = 1;
+	  game++; //If at GAME 1, proceed to GAME 2
+	  if (game > 2) game = 1; //Reset to 1 after requesting change from GAME 2
 
 	  /* The method below might be more scalable
-	   * game++;
-	   * if (game > 2) game = 1;
+	  if (game == 1) game = 2; //If at GAME 1, proceed to GAME 2
+	  else game = 1; //Reset to 1 after requesting change from GAME 2
 	   */
+	  change_game = 1;
+
     EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
   }
 }
@@ -181,10 +182,10 @@ int main(void)
   GPIOA->PUPDR &= ~(1 << (11*2 + 1));
   GPIOA->PUPDR |= (1 << (11*2));
   //EXTI1
-  EXTI->IMR |= BIT_2; // Enables the interrupt
   EXTI->RTSR |= BIT_2; // Enables rising edge in EXTI1
   EXTI->FTSR &= ~(BIT_2); // Disables falling edge in EXTI1
   SYSCFG->EXTICR[2] = 0000; // Linking EXTI2 to GPIOA (BUTTON 1 = PA11)
+  EXTI->IMR |= BIT_2; // Enables the interrupt
   NVIC->ISER[0] |= (1 << 7); // EXTI1 has pos 7
 
   //PA12 (BUTTON 2) - digital input (00)
@@ -194,10 +195,10 @@ int main(void)
   GPIOA->PUPDR &= ~(1 << (12*2 + 1));
   GPIOA->PUPDR |= (1 << (12*2));
   //EXTI2
-  EXTI->IMR |= BIT_3; // Enables the interrupt
   EXTI->RTSR |= BIT_3; // Enables rising edge in EXTI2
   EXTI->FTSR &= ~(BIT_3); // Disables falling edge in EXTI2
   SYSCFG->EXTICR[3] = 0000; // Linking EXTI3 to GPIOA (BUTTON 2 = PA12)
+  EXTI->IMR |= BIT_3; // Enables the interrupt
   NVIC->ISER[0] |= (1 << 8); // EXTI3 has pos 8
 /*
 */
@@ -283,7 +284,7 @@ int main(void)
               GPIOB->BSRR = (1<<6) << 16; //BLUE OFF
               break;
             }
-            if( winner == 2 /* (GPIOA->IDR&0x1000) == 0 */) //button 2 pressed? PA12=1?
+            if( EXTI->PR!=0 /* (GPIOA->IDR&0x1000) == 0 */) //button 2 pressed? PA12=1?
             {
               GPIOB->BSRR = (1<<7) << 16; //GREEN LED OFF
               GPIOB->BSRR = (1<<6); //BLUE LED ON - Signaling a win (IRQ Worked)
