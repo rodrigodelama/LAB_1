@@ -187,13 +187,13 @@ int main(void)
   //Set up with pull-up resistor (01)
   GPIOA->PUPDR &= ~(1 << (12*2 + 1));
   GPIOA->PUPDR |= (1 << (12*2));
-/*
   //EXTI2
   EXTI->RTSR |= BIT_3; // Enables rising edge in EXTI2
   EXTI->FTSR &= ~(BIT_3); // Disables falling edge in EXTI2
-  SYSCFG->EXTICR[0] = 0; // EXTI2 is linked to GPIOA (BUTTON 2 = PA12) - TODO: DOUBLE CHECK
+  SYSCFG->EXTICR[0] |= BIT_3; // EXTI2 is linked to GPIOA (BUTTON 2 = PA12) - TODO: DOUBLE CHECK
   EXTI->IMR |= BIT_3; // Enables the interrupt
   NVIC->ISER[0] |= (1 << 8);
+/*
 */
   //LEDs
   //PB6 (BLUE LED) - digital output (01) - ERROR LED
@@ -271,7 +271,7 @@ int main(void)
               GPIOB->BSRR = (1<<6) << 16; //BLUE OFF
               break;
             }
-            if(/* (EXTI->PR&BIT_3) == 0 */ (GPIOA->IDR&0x1000) == 0 ) //button 2 pressed? PA12=1?
+            if( (EXTI->PR&BIT_3) != 0 /* (GPIOA->IDR&0x1000) == 0 */) //button 2 pressed? PA12=1?
             {
               GPIOB->BSRR = (1<<7) << 16; //GREEN LED OFF
               GPIOB->BSRR = (1<<6); //BLUE LED ON - Signaling a win (IRQ Worked)
