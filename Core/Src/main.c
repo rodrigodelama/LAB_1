@@ -85,23 +85,6 @@ void EXTI0_IRQHandler(void)
 	   * if (game > 2) game = 1;
 	   */
 
-    /*
-	  switch(game)
-	  {
-	    case 1:
-	    	  BSP_LCD_GLASS_Clear(); //We will always clear before writing new text to avoid visual errors
-	    	  //FIXME: we CANNOT write to lcd from interrupts, we need to figure out a way to restart (generate a break) the game switch
-	    	  //BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
-	    break;
-	    case 2:
-	    	  BSP_LCD_GLASS_Clear();
-	    	  //FIXME:
-	    	  //BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME2");
-		  break;
-	  }
-	  EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
-  }
-  */
 }
 //TODO:
 //how do we determine which button is pressed first in the main section ??
