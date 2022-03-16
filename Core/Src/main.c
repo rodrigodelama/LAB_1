@@ -77,6 +77,7 @@ void EXTI0_IRQHandler(void)
   {
 	  if (game == 1) game = 2; //If at GAME 1, proceed to GAME 2
 	  else game = 1; //Reset to 1 after requesting change from GAME 2
+	  change_game = 1;
 
 	  /* The method below might be more scalable
 	   * game++;
@@ -106,7 +107,18 @@ void EXTI1_IRQHandler(void) //ISR for EXTI1 - Edge detection for BUTTON 1
 {
   if ((EXTI->PR&BIT_2) != 0) //0000000000000010 in binary
   {                         // BUTTON 1 is pressed, a rising edge is detected in PA11
+<<<<<<< Updated upstream
     winner = 1;
+=======
+    /*//TESTING
+        if ((GPIOA->IDR&BIT_12) == 0)
+        {
+        GPIOB->BSRR = (1 << 6);
+        winner = 1;
+        }
+     */
+    //winner = 1; //Possible not needed
+>>>>>>> Stashed changes
     EXTI->PR |= (1 << 7); // Clear the EXTI1 flag (writes a 1 in PR1)
   }
 }
@@ -220,6 +232,7 @@ int main(void)
 
     switch(game)
     {
+<<<<<<< Updated upstream
       case 1: // Game 1
         BSP_LCD_GLASS_Clear();
         BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
@@ -254,13 +267,74 @@ int main(void)
             BSP_LCD_GLASS_Clear();
             BSP_LCD_GLASS_DisplayString((uint8_t*)" RESET");
           break;
+=======
+      case 1: // GAME 1
+        while (1)
+        {
+        //BSP_LCD_GLASS_Clear();
+        BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
+        espera(2*sec);
+          if (change_game == 1)
+          {
+            //FIXME: delete below
+            BSP_LCD_GLASS_Clear();
+            BSP_LCD_GLASS_DisplayString((uint8_t*)" SWAP");
+            espera(sec);
+            //
+            change_game = 0;
+            break;
+          }
+
+          //GAME STARTS HERE
+          BSP_LCD_GLASS_Clear(); //Clear LCD
+          BSP_LCD_GLASS_DisplayString((uint8_t*)" READY");
+          espera(2*sec);
+          BSP_LCD_GLASS_Clear();
+          BSP_LCD_GLASS_DisplayString((uint8_t*)" SET");
+          espera(sec);
+          BSP_LCD_GLASS_Clear();
+          espera(sec);
+          GPIOB->BSRR = (1<<7); //GREEN LED ON
+          // DELETEespera(3*sec); //shall be random in milestone 2
+          while(1)
+          {
+          if(/* (EXTI->PR&BIT_2) == 0 */ (GPIOA->IDR&0x800) == 0 ) //button 1 pressed? PA11=1?
+          {
+            GPIOB->BSRR = (1<<7) << 16; //GREEN LED OFF
+            GPIOB->BSRR = (1<<6); //BLUE LED ON - Signaling a win (IRQ Worked)
+
+            BSP_LCD_GLASS_Clear(); //Clear LCD
+            BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W"); //LCD “ON”
+            espera(2*sec);
+
+            GPIOB->BSRR = (1<<6) << 16; //BLUE OFF
+            break;
+          }
+          if(/* (EXTI->PR&BIT_3) == 0 */ (GPIOA->IDR&0x1000) == 0 ) //button 2 pressed? PA12=1?
+          {
+            GPIOB->BSRR = (1<<7) << 16; //GREEN LED OFF
+            GPIOB->BSRR = (1<<6); //BLUE LED ON - Signaling a win (IRQ Worked)
+
+            BSP_LCD_GLASS_Clear(); //Clear LCD - less letters
+            BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W"); //LCD “ON”
+            espera(2*sec);
+
+            GPIOB->BSRR = (1<<6) << 16; //BLUE OFF
+            break;
+          }
+          }
+>>>>>>> Stashed changes
         }
       break;
 
       case 2: // Game 2
         //TODO: Game 2 will be done at a later milestone
-        BSP_LCD_GLASS_Clear();
+        //BSP_LCD_GLASS_Clear();
         BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME2");
+<<<<<<< Updated upstream
+=======
+        //espera(3*sec);
+>>>>>>> Stashed changes
       break;
 
       default:
