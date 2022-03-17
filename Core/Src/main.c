@@ -17,6 +17,8 @@
   *                   Manuel Morales Niño @ikaoseu
   *                   Jaime Mato Rodriguez @Pekeniojimi
   *
+  * @repo           : https://github.com/rodrigodelama/LAB_1
+  *
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -53,9 +55,8 @@ LCD_HandleTypeDef hlcd;
 //GLOBAL VARS & DEFINITIONS
 #define sec 2500000 //definition of 1 second
 
-unsigned int prev_game = 2;
+unsigned int prev_game = 0;
 unsigned int game = 1; //game 1 is the starting point
-//unsigned int actual_g = 0;
 unsigned int winner = 0; //Init to 0, if it never changes, it will generate an error
 /* USER CODE END PV */
 
@@ -84,19 +85,19 @@ void EXTI0_IRQHandler(void) //USER BUTTON is pressed, a rising edge is detected 
 }
 
 // NVIC->ISER[1] pins 32-63, pin 40 for EXTI15_10
-void EXTI15_10_IRQHandler(void) //ISR for EXTI2 - Edge detection for BUTTON 2
+void EXTI15_10_IRQHandler(void) //ISR for EXTI11 & EXTI12
 {
   if (EXTI->PR != 0)
   {
-    if (EXTI->PR & BIT_11) // 00001000000000000 in register
-    {                        // BUTTON 1 is pressed, a rising edge is detected in PA11
+    if (EXTI->PR & (1 << 11)) // 00001000000000000 in register
+    {                      // BUTTON 1 is pressed, a rising edge is detected in PA11
       winner = 1;
-      EXTI->PR |= (1 << 11); // Clears the EXTI11 flag (writes a 1 in PR11)
+      EXTI->PR |= (1 << 11); // Clear the EXTI11 flag (writes a 1 in PR11)
     }
-    if (EXTI->PR & BIT_12) // 00010000000000000 in register
-    {                        // BUTTON 2 is pressed, a rising edge is detected in PA12
+    if (EXTI->PR & (1 << 12)) // 00010000000000000 in register
+    {                      // BUTTON 2 is pressed, a rising edge is detected in PA12
       winner = 2;
-      EXTI->PR |= (1 << 12); // Clears the EXTI12 flag
+      EXTI->PR |= (1 << 12); // Clear the EXTI12 flag
     }
   }
 }
@@ -157,16 +158,16 @@ int main(void)
   GPIOA->MODER &= ~(1 << (11*2 + 1));
   GPIOA->MODER &= ~(1 << (11*2));
   //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ????
-  //Pull-Up: should be a constant 0, unless we press, then it should change to a 1
+  //We chose pull-up: a constant 1 unless we press, then it should change to a 0 (GND)
   //Set up with pull-up resistor (01)
   GPIOA->PUPDR &= ~(1 << (11*2 + 1));
   GPIOA->PUPDR |= (1 << (11*2));
   //EXTI11
-  EXTI->IMR |= BIT_2; // Enables the interrupt
+  EXTI->IMR |= BIT_11; // Enables the interrupt
   SYSCFG->EXTICR[2] = 0000; // Linking EXTI2 to GPIOA (BUTTON 1 = PA11)
   EXTI->RTSR |= BIT_11; // Enables rising edge in EXTI1
   EXTI->FTSR &= ~(BIT_11); // Disables falling edge in EXTI1
-  NVIC->ISER[1] |= (1 << 7); // EXTI11 has pos 7 in ISER[1]
+  NVIC->ISER[1] |= (1 << (40-32)); // EXTI11 has pos 7 in ISER[1], 32 is 0, 7 is 40
 
   //PA12 (BUTTON 2) - digital input (00)
   GPIOA->MODER &= ~(1 << (12*2 + 1));
@@ -175,11 +176,11 @@ int main(void)
   GPIOA->PUPDR &= ~(1 << (12*2 + 1));
   GPIOA->PUPDR |= (1 << (12*2));
   //EXTI2
-  EXTI->IMR |= BIT_3; // Enables the interrupt
+  EXTI->IMR |= BIT_12; // Enables the interrupt
   SYSCFG->EXTICR[3] = 0000; // Linking EXTI3 to GPIOA (BUTTON 2 = PA12)
   EXTI->RTSR |= BIT_12; // Enables rising edge in EXTI2
   EXTI->FTSR &= ~(BIT_12); // Disables falling edge in EXTI2
-  NVIC->ISER[1] |= (1 << 8); // EXTI3 has pos 8 in ISER[1]
+  NVIC->ISER[1] |= (1 << (40-32)); // EXTI3 has pos 8 in ISER[1]
 
   //LEDs
   //PB6 (BLUE LED) - digital output (01) - ERROR LED
@@ -225,15 +226,19 @@ int main(void)
             //WINNER is determined by the interrupts, they will change the var winner to 1 or 2 respectively
             if (winner == 1)
             {
+              GPIOB->BSRR = (1<<7) << 16;
               BSP_LCD_GLASS_Clear();
               BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W");
               espera(2*sec);
+              winner == 0;
             }
             else if (winner == 2) // We use an else if because we only want ONE winner
             {
+              GPIOB->BSRR = (1<<7) << 16;
               BSP_LCD_GLASS_Clear();
               BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W");
               espera(2*sec);
+              winner == 0;
             }
           }
         break;
