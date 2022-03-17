@@ -73,10 +73,10 @@ static void MX_TS_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 //INTERRUPTS
-void EXTI0_IRQHandler(void) //USER BUTTON is pressed, a rising edge is detected in PA0
+void EXTI0_IRQHandler(void)
 {
   if ((EXTI->PR&BIT_0) != 0) // Is EXTI0 flag on? //0000000000000001 in the Pending Register
-  {
+  {                          // USER BUTTON is pressed, a rising edge is detected in PA0
 	game++; //If at GAME 1, proceed to GAME 2
 	if (game > 2) game = 1; //Reset to 1 after requesting change from GAME 2
 
@@ -89,12 +89,12 @@ void EXTI15_10_IRQHandler(void) //ISR for EXTI11 & EXTI12
 {
   if (EXTI->PR != 0)
   {
-    if (EXTI->PR & (1 << 11)) // 00001000000000000 in register
+    if (EXTI->PR & (1 << 11)) // 00001000000000000 in pending register
     {                      // BUTTON 1 is pressed, a rising edge is detected in PA11
       winner = 1;
       EXTI->PR |= (1 << 11); // Clear the EXTI11 flag (writes a 1 in PR11)
     }
-    if (EXTI->PR & (1 << 12)) // 00010000000000000 in register
+    if (EXTI->PR & (1 << 12)) // 00010000000000000 in pending register
     {                      // BUTTON 2 is pressed, a rising edge is detected in PA12
       winner = 2;
       EXTI->PR |= (1 << 12); // Clear the EXTI12 flag
@@ -148,7 +148,7 @@ int main(void)
   GPIOA->MODER &= ~(1 << (0*2));
   //EXTI0
   EXTI->IMR |= BIT_0; // Enables the Interrupt (i.e. the event) (IMR = Interrupt Mask Register)
-  SYSCFG->EXTICR[0] = 0000; // Linking EXTI0 to GPIOA (USER BUTTON = PA0) - all zeros mean GPIOA
+  SYSCFG->EXTICR[0] = 0000; // Linking EXTI0 to GPIOA (PA0 = USER BUTTON) - all zeros mean GPIOA
   EXTI->RTSR |= BIT_0; // Enables rising edge in EXTI0
   EXTI->FTSR &= ~(BIT_0); // Disables falling edge in EXTI0
   NVIC->ISER[0] |= (1 << 6); //Enables EXTI0 in NVIC (pos 6)
@@ -157,17 +157,20 @@ int main(void)
   //PA11 (BUTTON 1) - digital input (00)
   GPIOA->MODER &= ~(1 << (11*2 + 1));
   GPIOA->MODER &= ~(1 << (11*2));
-  //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ????
+  //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ?
   //We chose pull-up: a constant 1 unless we press, then it should change to a 0 (GND)
   //Set up with pull-up resistor (01)
   GPIOA->PUPDR &= ~(1 << (11*2 + 1));
   GPIOA->PUPDR |= (1 << (11*2));
   //EXTI11
   EXTI->IMR |= BIT_11; // Enables the interrupt
-  SYSCFG->EXTICR[2] = 0000; // Linking EXTI2 to GPIOA (BUTTON 1 = PA11)
+  SYSCFG->EXTICR[2] = 0000; // Linking EXTI2 to GPIOA (PA11 = BUTTON 1)
   EXTI->RTSR |= BIT_11; // Enables rising edge in EXTI1
   EXTI->FTSR &= ~(BIT_11); // Disables falling edge in EXTI1
-  NVIC->ISER[1] |= (1 << (40-32)); // EXTI11 has pos 7 in ISER[1], 32 is 0, 7 is 40
+  NVIC->ISER[1] |= (1 << (40-32)); // EXTI11 & 12 have position 40 in the NVIC, since
+                                   // the pins are split between two 32bit ISER banks,
+                                   // ISER[1] is for bits 32 to 63
+                                   // Since our bit is 40, we will activate bit (40-32) = 8
 
   //PA12 (BUTTON 2) - digital input (00)
   GPIOA->MODER &= ~(1 << (12*2 + 1));
@@ -177,7 +180,7 @@ int main(void)
   GPIOA->PUPDR |= (1 << (12*2));
   //EXTI2
   EXTI->IMR |= BIT_12; // Enables the interrupt
-  SYSCFG->EXTICR[3] = 0000; // Linking EXTI3 to GPIOA (BUTTON 2 = PA12)
+  SYSCFG->EXTICR[3] = 0000; // Linking EXTI3 to GPIOA (PA12 = BUTTON 2)
   EXTI->RTSR |= BIT_12; // Enables rising edge in EXTI2
   EXTI->FTSR &= ~(BIT_12); // Disables falling edge in EXTI2
   NVIC->ISER[1] |= (1 << (40-32)); // EXTI3 has pos 8 in ISER[1]
@@ -196,10 +199,14 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    //Requirements
     //Display GAME 1 (initially) --> DONE IN GLOBAL VAR DECLARATION
-    //if USER BUTTON is pressed, change to GAME 2 (at ANY time - use interrupts)
-    //else wait predetermined time and start (use espera() function)
-    if (prev_game != game) // To immediately switch between game 1 and 2
+    //If the USER BUTTON is pressed, change to GAME 2 (at ANY time) --> global if
+    //In GAME 1, wait predetermined time and start (use espera() function)
+
+    //Global IF condition, so we may immediately switch between games
+    //(a WHILE would force us to finish the code execution inside)
+    if (prev_game != game)
     {
       GPIOB->BSRR = (1<<7) << 16; //in case the game mode was changed while awaiting input in GAME 1
       prev_game = game;
@@ -213,24 +220,24 @@ int main(void)
             espera(2*sec);
 
             //GAME STARTS HERE
-            BSP_LCD_GLASS_Clear(); //not strictly needed since we have the same No of chars to display
+            BSP_LCD_GLASS_Clear(); //Not strictly needed since we are printing the same No. of chars to display
             BSP_LCD_GLASS_DisplayString((uint8_t*)" READY");
             espera(2*sec);
 
-            // Waiting for users to input
-            while ((game == 1) && (winner == 0))
+            //Waiting for users to input
+            while ((game == 1) && (winner == 0)) //(game == 1) is also necessary in case we want to change games here
             {
-              GPIOB->BSRR = (1<<7); //GREEN LED ON while no player has pressed their button
+              GPIOB->BSRR = (1<<7); //GREEN LED ON while no player has pressed their button yet
             }
 
             //WINNER is determined by the interrupts, they will change the var winner to 1 or 2 respectively
             if (winner == 1)
             {
-              GPIOB->BSRR = (1<<7) << 16;
+              GPIOB->BSRR = (1<<7) << 16; //Turn off the LED after a win
               BSP_LCD_GLASS_Clear();
               BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W");
-              espera(2*sec);
-              winner == 0;
+              espera(2*sec); //wait so the player acknowledges their win
+              winner = 0; //reset winner for future match
             }
             else if (winner == 2) // We use an else if because we only want ONE winner
             {
@@ -238,7 +245,7 @@ int main(void)
               BSP_LCD_GLASS_Clear();
               BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W");
               espera(2*sec);
-              winner == 0;
+              winner = 0;
             }
           }
         break;
@@ -247,12 +254,13 @@ int main(void)
           while (game == 2)
           {
             //TODO: Game 2 will be done at a later milestone
-            //BSP_LCD_GLASS_Clear();
+            //BSP_LCD_GLASS_Clear(); //commented since 4 chars is the max we will write, and we want to avoid GAME2 strobing
             BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME2");
-            //espera(3*sec);
+            //espera(3*sec); //not needed, especially if we want to quickly switch
           }
         break;
-
+        //This code should be unreachable on purpose
+        //Written to acknowledge a logical failure (of our code)
         default:
           GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
           GPIOB->BSRR = (1 << 6); //BLUE LED ON signalling an error
