@@ -1,3 +1,5 @@
+#define sec 2500000 //definition of 1 second for microcontroller
+
 #define BIT_0 0x00000001
 #define BIT_1 0x00000002
 #define BIT_2 0x00000004

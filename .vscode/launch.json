@@ -9,9 +9,9 @@
         ""
       ],
       "stopAtEntry": false,
-      "cwd": "c:/Users/rodri/OneDrive - Universidad Carlos III de Madrid/Microprocessor Based Digital Systems/code/LAB_1/Core/Src",
+      "cwd": "c:/Users/rodri/OneDrive - Universidad Carlos III de Madrid/Microprocessor Based Digital Systems/code/LAB_1",
       "environment": [],
-      "program": "c:/Users/rodri/OneDrive - Universidad Carlos III de Madrid/Microprocessor Based Digital Systems/code/LAB_1/Core/Src/build/Debug/outDebug",
+      "program": "c:/Users/rodri/OneDrive - Universidad Carlos III de Madrid/Microprocessor Based Digital Systems/code/LAB_1/build/Debug/outDebug",
       "internalConsoleOptions": "openOnSessionStart",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",

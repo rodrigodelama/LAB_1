@@ -53,8 +53,6 @@ LCD_HandleTypeDef hlcd;
 
 /* USER CODE BEGIN PV */
 //GLOBAL VARS & DEFINITIONS
-#define sec 2500000 //definition of 1 second
-
 unsigned int prev_game = 0;
 unsigned int game = 1; //game 1 is the starting point
 unsigned int winner = 0; //Init to 0, if it never changes, it will generate an error
@@ -76,29 +74,45 @@ static void MX_TS_Init(void);
 //INTERRUPTS
 void EXTI0_IRQHandler(void)
 {
-  if ((EXTI->PR&BIT_0) != 0) // Is EXTI0 flag on? //0000000000000001 in the Pending Register
-  {                          // USER BUTTON is pressed, a rising edge is detected in PA0
+  // USER BUTTON is pressed, a rising edge is detected in PA0
+  if ((EXTI->PR&BIT_0) != 0) // Is EXTI0 flag on? //0000000000000001 in the Pending Register of ISER[0]
+  {
 	game++; //If at GAME 1, proceed to GAME 2
 	if (game > 2) game = 1; //Reset to 1 after requesting change from GAME 2
-
   }
   //Clear flag must be out of condition so it never hangs if condition is not met
   EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
 }
 
-// NVIC->ISER[1] pins 32-63, pin 40 for EXTI15_10
+// NVIC->ISER[0] pin 23 for EXTI5_9
+void EXTI5_9_IRQHandler(void) //ISR for EXTI7 & EXTI6
+{
+  if (EXTI->PR != 0) //TODO: maybe try (((EXTI->PR&BIT_7) || (EXTI->PR&BIT_6)) != 0)
+  {
+    // BUTTON 1 is pressed, a rising edge is detected in PB7
+    if (EXTI->PR &(1 << 7) && (playing == 1)) // 00000000010000000 in pending register of ISER[0]
+    {
+      winner = 1;
+    }
+    EXTI->PR |= (1 << 7); // Clear the EXTI7 flag (writes a 1 in PR7)
+
+    // BUTTON 2 is pressed, a rising edge is detected in PB6
+    if (EXTI->PR &(1 << 6) && (playing == 1)) // 00000000001000000 in pending register
+    {
+      winner = 2;
+    }
+    EXTI->PR |= (1 << 6); // Clear the EXTI6 flag
+  }
+}
+// NVIC->ISER[1] for pins 32 to 63, pin 40 for EXTI15_10
 void EXTI15_10_IRQHandler(void) //ISR for EXTI11 & EXTI12
 {
   if (EXTI->PR != 0)
   {
-    if (EXTI->PR & (1 << 11) && (playing == 1)) // 00001000000000000 in pending register
-    {                      // BUTTON 1 is pressed, a rising edge is detected in PA11
-      winner = 1;
-    }
-    EXTI->PR |= (1 << 11); // Clear the EXTI11 flag (writes a 1 in PR11)
-    if (EXTI->PR & (1 << 12) && (playing == 1)) // 00010000000000000 in pending register
-    {                      // BUTTON 2 is pressed, a rising edge is detected in PA12
-      winner = 2;
+    //EXTERNAL LED ON
+    if (EXTI->PR &(1 << 12)) // 00010000000000000 in pending register of ISER[1]
+    {
+      //TODO:
     }
     EXTI->PR |= (1 << 12); // Clear the EXTI12 flag
   }
@@ -153,47 +167,50 @@ int main(void)
   SYSCFG->EXTICR[0] = 0000; // Linking EXTI0 to GPIOA (PA0 = USER BUTTON) - all zeros mean GPIOA
   EXTI->RTSR |= BIT_0; // Enables rising edge in EXTI0
   EXTI->FTSR &= ~(BIT_0); // Disables falling edge in EXTI0
-  NVIC->ISER[0] |= (1 << 6); //Enables EXTI0 in NVIC (pos 6)
+  NVIC->ISER[0] |= (1 << 6); //Enables EXTI0 in the NVICs ISER[0]s position 6
 
-  //USING UNUSED I/O PINS 11 and 12
-  //PA11 (BUTTON 1) - digital input (00)
-  GPIOA->MODER &= ~(1 << (11*2 + 1));
-  GPIOA->MODER &= ~(1 << (11*2));
+  //USING I/O PINS 7 & 6 FOR PLAYER BUTTONS 1 & 2 RESPECTIVELY
+  //PB7 (BUTTON 1) - digital input (00)
+  GPIOB->MODER &= ~(1 << (7*2 + 1));
+  GPIOB->MODER &= ~(1 << (7*2));
   //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ?
-  //We chose pull-up: a constant 1 unless we press, then it should change to a 0 (GND)
+  //We chose pull-up: a constant 1 unless we press, then its shorted to GND
   //Set up with pull-up resistor (01)
-  GPIOA->PUPDR &= ~(1 << (11*2 + 1));
-  GPIOA->PUPDR |= (1 << (11*2));
-  //EXTI11
-  EXTI->IMR |= BIT_11; // Enables the interrupt
-  SYSCFG->EXTICR[2] = 0000; // Linking EXTI2 to GPIOA (PA11 = BUTTON 1)
-  EXTI->RTSR |= BIT_11; // Enables rising edge in EXTI1
-  EXTI->FTSR &= ~(BIT_11); // Disables falling edge in EXTI1
-  NVIC->ISER[1] |= (1 << (40-32)); // EXTI11 & 12 have position 40 in the NVIC, since
-                                   // the pins are split between two 32bit ISER banks,
-                                   // ISER[1] is for bits 32 to 63
-                                   // Since our bit is 40, we will activate bit (40-32) = 8
+  GPIOB->PUPDR &= ~(1 << (7*2 + 1));
+  GPIOB->PUPDR |= (1 << (7*2));
+  //EXTI7
+  EXTI->IMR |= BIT_7; // Enables the interrupt
+  SYSCFG->EXTICR[1] = 0001; // Linking EXTI7 to GPIOB (PB7 = BUTTON 1)
+  EXTI->RTSR |= BIT_7; // Enables rising edge in EXTI7
+  EXTI->FTSR &= ~(BIT_7); // Disables falling edge in EXTI7
+  NVIC->ISER[0] |= (1 << (23)); // EXTI7 has position 23 in ISER[0]
 
-  //PA12 (BUTTON 2) - digital input (00)
+  //PB6 (BUTTON 2) - digital input (00)
+  GPIOB->MODER &= ~(1 << (6*2 + 1));
+  GPIOB->MODER &= ~(1 << (6*2));
+  //Set up with pull-up resistor (01)
+  GPIOB->PUPDR &= ~(1 << (6*2 + 1));
+  GPIOB->PUPDR |= (1 << (6*2));
+  //EXTI6
+  EXTI->IMR |= BIT_6; // Enables the interrupt
+  SYSCFG->EXTICR[1] = 0001; // Linking EXTI6 to GPIOB (PB6 = BUTTON 2)
+  EXTI->RTSR |= BIT_6; // Enables rising edge in EXTI6
+  EXTI->FTSR &= ~(BIT_6); // Disables falling edge in EXTI6
+  NVIC->ISER[0] |= (1 << (23)); // EXTI6 & 7 have position 23 in the NVIC, since
+
+  //LED
+  //PA12 (EXTERNAL LED) - digital output (01)
   GPIOA->MODER &= ~(1 << (12*2 + 1));
-  GPIOA->MODER &= ~(1 << (12*2));
+  GPIOA->MODER |= (1 << (12*2));
   //Set up with pull-up resistor (01)
   GPIOA->PUPDR &= ~(1 << (12*2 + 1));
   GPIOA->PUPDR |= (1 << (12*2));
-  //EXTI2
+  //EXTI12
   EXTI->IMR |= BIT_12; // Enables the interrupt
-  SYSCFG->EXTICR[3] = 0000; // Linking EXTI3 to GPIOA (PA12 = BUTTON 2)
-  EXTI->RTSR |= BIT_12; // Enables rising edge in EXTI2
-  EXTI->FTSR &= ~(BIT_12); // Disables falling edge in EXTI2
-  NVIC->ISER[1] |= (1 << (40-32)); // EXTI3 has pos 8 in ISER[1]
-
-  //LEDs
-  //PB6 (BLUE LED) - digital output (01) - ERROR LED
-  GPIOB->MODER &= ~(1 << (6*2 + 1));
-  GPIOB->MODER |= (1 << (6*2));
-  //PB7 (GREEN LED) - digital output (01)
-  GPIOB->MODER &= ~(1 << (7*2 + 1));
-  GPIOB->MODER |= (1 << (7*2));
+  SYSCFG->EXTICR[3] = 0000; // Linking EXTI12 to GPIOA (PA12 = LED)
+  EXTI->RTSR |= BIT_12; // Enables rising edge in EXTI12
+  EXTI->FTSR &= ~(BIT_12); // Disables falling edge in EXTI12
+  NVIC->ISER[1] |= (1 << (40-32)); // EXTI12 has position 8 in ISER[1]
 
   /* USER CODE END 2 */
 
@@ -210,7 +227,7 @@ int main(void)
     //(a WHILE would force us to finish the code execution inside)
     if (prev_game != game)
     {
-      GPIOB->BSRR = (1<<7) << 16; //in case the game mode was changed while awaiting input in GAME 1
+      GPIOA->BSRR = (1<<12) << 16; //in case the game mode was changed while awaiting input in GAME 1
       prev_game = game;
       switch(game)
       {
@@ -230,13 +247,13 @@ int main(void)
             while ((game == 1) && (winner == 0)) //(game == 1) is also necessary in case we want to change games here
             {
               playing = 1;
-              GPIOB->BSRR = (1<<7); //GREEN LED ON while no player has pressed their button yet
+              GPIOA->BSRR = (1<<12); //GREEN LED ON while no player has pressed their button yet
             }
 
             //WINNER is determined by the interrupts, they will change the var winner to 1 or 2 respectively
             if (winner == 1)
             {
-              GPIOB->BSRR = (1<<7) << 16; //Turn off the LED after a win
+              GPIOA->BSRR = (1<<12) << 16; //Turn off the LED after a win
               BSP_LCD_GLASS_Clear();
               BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W");
               espera(2*sec); //wait so the player acknowledges their win
@@ -245,7 +262,7 @@ int main(void)
             }
             else if (winner == 2) // We use an else if because we only want ONE winner
             {
-              GPIOB->BSRR = (1<<7) << 16;
+              GPIOA->BSRR = (1<<12) << 16;
               BSP_LCD_GLASS_Clear();
               BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W");
               espera(2*sec);
@@ -267,8 +284,7 @@ int main(void)
         //This code should be unreachable on purpose
         //Written to acknowledge a logical failure (of our code)
         default:
-          GPIOB->BSRR = (1 << 7) << 16; //GREEN LED OFF
-          GPIOB->BSRR = (1 << 6); //BLUE LED ON signalling an error
+          GPIOA->BSRR = (1<<12) << 16;
           BSP_LCD_GLASS_Clear();
           BSP_LCD_GLASS_DisplayString((uint8_t*)" ERROR");
           espera(2*sec);
