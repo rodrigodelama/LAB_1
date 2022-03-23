@@ -58,6 +58,7 @@ LCD_HandleTypeDef hlcd;
 unsigned int prev_game = 0;
 unsigned int game = 1; //game 1 is the starting point
 unsigned int winner = 0; //Init to 0, if it never changes, it will generate an error
+unsigned int playing = 0; // to not activate the interrupts unless we are awaiting
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -80,8 +81,9 @@ void EXTI0_IRQHandler(void)
 	game++; //If at GAME 1, proceed to GAME 2
 	if (game > 2) game = 1; //Reset to 1 after requesting change from GAME 2
 
-    EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
   }
+  //Clear flag must be out of condition so it never hangs if condition is not met
+  EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
 }
 
 // NVIC->ISER[1] pins 32-63, pin 40 for EXTI15_10
@@ -89,16 +91,16 @@ void EXTI15_10_IRQHandler(void) //ISR for EXTI11 & EXTI12
 {
   if (EXTI->PR != 0)
   {
-    if (EXTI->PR & (1 << 11)) // 00001000000000000 in pending register
+    if (EXTI->PR & (1 << 11) && (playing == 1)) // 00001000000000000 in pending register
     {                      // BUTTON 1 is pressed, a rising edge is detected in PA11
       winner = 1;
-      EXTI->PR |= (1 << 11); // Clear the EXTI11 flag (writes a 1 in PR11)
     }
-    if (EXTI->PR & (1 << 12)) // 00010000000000000 in pending register
+    EXTI->PR |= (1 << 11); // Clear the EXTI11 flag (writes a 1 in PR11)
+    if (EXTI->PR & (1 << 12) && (playing == 1)) // 00010000000000000 in pending register
     {                      // BUTTON 2 is pressed, a rising edge is detected in PA12
       winner = 2;
-      EXTI->PR |= (1 << 12); // Clear the EXTI12 flag
     }
+    EXTI->PR |= (1 << 12); // Clear the EXTI12 flag
   }
 }
 /* USER CODE END 0 */
@@ -142,7 +144,7 @@ int main(void)
   BSP_LCD_GLASS_BarLevelConfig(0);
   BSP_LCD_GLASS_Clear();
 
-  //PAs + their EXTIs - I/O
+  //Pins + their EXTIs - I/O
   //PA0 (USER BUTTON) - digital input (00)
   GPIOA->MODER &= ~(1 << (0*2 + 1));
   GPIOA->MODER &= ~(1 << (0*2));
@@ -227,6 +229,7 @@ int main(void)
             //Waiting for users to input
             while ((game == 1) && (winner == 0)) //(game == 1) is also necessary in case we want to change games here
             {
+              playing = 1;
               GPIOB->BSRR = (1<<7); //GREEN LED ON while no player has pressed their button yet
             }
 
@@ -238,6 +241,7 @@ int main(void)
               BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W");
               espera(2*sec); //wait so the player acknowledges their win
               winner = 0; //reset winner for future match
+              playing = 0;
             }
             else if (winner == 2) // We use an else if because we only want ONE winner
             {
@@ -246,6 +250,7 @@ int main(void)
               BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W");
               espera(2*sec);
               winner = 0;
+              playing = 0;
             }
           }
         break;
