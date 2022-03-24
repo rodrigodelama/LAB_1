@@ -57,6 +57,9 @@ unsigned int prev_game = 0;
 unsigned int game = 1; //game 1 is the starting point
 unsigned int winner = 0; //Init to 0, if it never changes, it will generate an error
 unsigned int playing = 0; // to not activate the interrupts unless we are awaiting
+unsigned short init_time = 0;
+int time1;
+unsigned int time_taken = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -231,7 +234,7 @@ int main(void)
       prev_game = game;
       switch(game)
       {
-        case 1: // GAME 1
+        case 1: // GAME 1 - REACTION TIME
           while (game == 1)
           {
             BSP_LCD_GLASS_Clear(); //Clear LCD
@@ -248,6 +251,9 @@ int main(void)
             {
               playing = 1;
               GPIOA->BSRR = (1<<12); //GREEN LED ON while no player has pressed their button yet
+              
+              //USE TIMER to count how many secs and add to a variable
+              //time_taken = timer_value at break
             }
 
             //WINNER is determined by the interrupts, they will change the var winner to 1 or 2 respectively
@@ -255,7 +261,8 @@ int main(void)
             {
               GPIOA->BSRR = (1<<12) << 16; //Turn off the LED after a win
               BSP_LCD_GLASS_Clear();
-              BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W");
+              //format shall be Y user followed by XXXX milliseconds
+              BSP_LCD_GLASS_DisplayString((uint8_t*)(" 1%d", time_taken));
               espera(2*sec); //wait so the player acknowledges their win
               winner = 0; //reset winner for future match
               playing = 0;
@@ -272,16 +279,18 @@ int main(void)
           }
         break;
 
-        case 2: // GAME 2
+        case 2: // GAME 2 - COUNTDOWN
           while (game == 2)
           {
-            //TODO: Game 2 will be done at a later milestone
-            //BSP_LCD_GLASS_Clear(); //commented since 4 chars is the max we will write, and we want to avoid GAME2 strobing
+            //TODO: COUNTDOWN
+            BSP_LCD_GLASS_Clear();
             BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME2");
-            //espera(3*sec); //not needed, especially if we want to quickly switch
+            espera(2*sec);
+
           }
         break;
-        //This code should be unreachable on purpose
+
+        //This code below should be unreachable on purpose
         //Written to acknowledge a logical failure (of our code)
         default:
           GPIOA->BSRR = (1<<12) << 16;
