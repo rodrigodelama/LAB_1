@@ -87,10 +87,6 @@ void Error_Handler(void);
 #define GRP9_Sampling_GPIO_Port GPIOC
 #define GRP9_Ground_Pin GPIO_PIN_5
 #define GRP9_Ground_GPIO_Port GPIOC
-#define GRP3_Sampling_Pin GPIO_PIN_0
-#define GRP3_Sampling_GPIO_Port GPIOB
-#define GRP3_Ground_Pin GPIO_PIN_1
-#define GRP3_Ground_GPIO_Port GPIOB
 #define SEG6_Pin GPIO_PIN_10
 #define SEG6_GPIO_Port GPIOB
 #define SEG7_Pin GPIO_PIN_11
