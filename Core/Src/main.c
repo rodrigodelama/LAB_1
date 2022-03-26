@@ -90,7 +90,7 @@ void EXTI0_IRQHandler(void)
   EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
 }
 
-// NVIC->ISER[0] pin 23 for EXTI5_9
+// NVIC->ISER[0] pin 23 for EXTIs 5 to 9
 void EXTI5_9_IRQHandler(void) //ISR for EXTI7 & EXTI6
 {
   if (EXTI->PR != 0) //TODO: maybe try (((EXTI->PR&BIT_7) || (EXTI->PR&BIT_6)) != 0)
@@ -190,7 +190,7 @@ int main(void)
   SYSCFG->EXTICR[1] = 0001; // Linking EXTI7 to GPIOB (PB7 = BUTTON 1)
   EXTI->RTSR |= BIT_7; // Enables rising edge in EXTI7
   EXTI->FTSR &= ~(BIT_7); // Disables falling edge in EXTI7
-  NVIC->ISER[0] |= (1 << (23)); // EXTI7 has position 23 in ISER[0]
+  NVIC->ISER[0] |= (1 << 23); // EXTI7 has position 23 in ISER[0]
 
   //PB6 (BUTTON 2) - digital input (00)
   GPIOB->MODER &= ~(1 << (6*2 + 1));
@@ -203,7 +203,7 @@ int main(void)
   SYSCFG->EXTICR[1] = 0001; // Linking EXTI6 to GPIOB (PB6 = BUTTON 2)
   EXTI->RTSR |= BIT_6; // Enables rising edge in EXTI6
   EXTI->FTSR &= ~(BIT_6); // Disables falling edge in EXTI6
-  NVIC->ISER[0] |= (1 << (23)); // EXTI6 & 7 have position 23 in the NVIC, since
+  NVIC->ISER[0] |= (1 << 23); // EXTI6 & 7 have position 23 in the NVIC, since
 
   //LED
   //PA12 (EXTERNAL LED) - digital output (01)
@@ -212,7 +212,7 @@ int main(void)
   //Set up with pull-up resistor (01)
   GPIOA->PUPDR &= ~(1 << (12*2 + 1));
   GPIOA->PUPDR |= (1 << (12*2));
-  //EXTI12
+  //EXTI12 - NO NEED, NO INTERACTION W/ LED, JUST ON OR OFF
   EXTI->IMR |= BIT_12; // Enables the interrupt
   SYSCFG->EXTICR[3] = 0000; // Linking EXTI12 to GPIOA (PA12 = LED)
   EXTI->RTSR |= BIT_12; // Enables rising edge in EXTI12
@@ -249,6 +249,8 @@ int main(void)
             BSP_LCD_GLASS_Clear(); //Not strictly needed since we are printing the same No. of chars to display
             BSP_LCD_GLASS_DisplayString((uint8_t*)" READY");
             espera(2*sec);
+            BSP_LCD_GLASS_Clear();
+            BSP_LCD_GLASS_DisplayString((uint8_t*)"  GO");
 
             //Waiting for users to input
             while ((game == 1) && (winner == 0)) //(game == 1) is also necessary in case we want to change games here
