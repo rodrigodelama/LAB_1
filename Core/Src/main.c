@@ -93,23 +93,25 @@ void EXTI0_IRQHandler(void)
 // NVIC->ISER[0] pin 23 for EXTIs 5 to 9
 void EXTI5_9_IRQHandler(void) //ISR for EXTI7 & EXTI6
 {
-  if (EXTI->PR != 0) //TODO: maybe try (((EXTI->PR&BIT_7) || (EXTI->PR&BIT_6)) != 0)
+  if (((EXTI->PR&BIT_7) || (EXTI->PR&BIT_6)) != 0) //(EXTI->PR != 0) //TODO: maybe try (((EXTI->PR&BIT_7) || (EXTI->PR&BIT_6)) != 0)
   {
     // BUTTON 1 is pressed, a rising edge is detected in PB7
-    if (EXTI->PR &(1 << 7) && (playing == 1)) // 00000000010000000 in pending register of ISER[0]
+    if (EXTI->PR & (1 << 7) && (playing == 1)) // 00000000010000000 in pending register of ISER[0]
     {
       winner = 1;
     }
     EXTI->PR |= (1 << 7); // Clear the EXTI7 flag (writes a 1 in PR7)
 
     // BUTTON 2 is pressed, a rising edge is detected in PB6
-    if (EXTI->PR &(1 << 6) && (playing == 1)) // 00000000001000000 in pending register
+    if (EXTI->PR & (1 << 6) && (playing == 1)) // 00000000001000000 in pending register
     {
       winner = 2;
     }
     EXTI->PR |= (1 << 6); // Clear the EXTI6 flag
   }
 }
+
+/*
 // NVIC->ISER[1] for pins 32 to 63, pin 40 for EXTI15_10
 void EXTI15_10_IRQHandler(void) //ISR for EXTI11 & EXTI12
 {
@@ -123,6 +125,8 @@ void EXTI15_10_IRQHandler(void) //ISR for EXTI11 & EXTI12
     EXTI->PR |= (1 << 12); // Clear the EXTI12 flag
   }
 }
+*/
+
 /* USER CODE END 0 */
 
 /**
@@ -212,12 +216,14 @@ int main(void)
   //Set up with pull-up resistor (01)
   GPIOA->PUPDR &= ~(1 << (12*2 + 1));
   GPIOA->PUPDR |= (1 << (12*2));
+  /*
   //EXTI12 - NO NEED, NO INTERACTION W/ LED, JUST ON OR OFF
   EXTI->IMR |= BIT_12; // Enables the interrupt
   SYSCFG->EXTICR[3] = 0000; // Linking EXTI12 to GPIOA (PA12 = LED)
   EXTI->RTSR |= BIT_12; // Enables rising edge in EXTI12
   EXTI->FTSR &= ~(BIT_12); // Disables falling edge in EXTI12
   NVIC->ISER[1] |= (1 << (40-32)); // EXTI12 has position 8 in ISER[1]
+  */
 
   /* USER CODE END 2 */
 
@@ -244,20 +250,23 @@ int main(void)
             BSP_LCD_GLASS_Clear(); //Clear LCD
             BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
             espera(2*sec);
-
+            if (prev_game != game) break;
             //GAME STARTS HERE
             BSP_LCD_GLASS_Clear(); //Not strictly needed since we are printing the same No. of chars to display
             BSP_LCD_GLASS_DisplayString((uint8_t*)" READY");
             espera(2*sec);
+            if (prev_game != game) break;
             BSP_LCD_GLASS_Clear();
             BSP_LCD_GLASS_DisplayString((uint8_t*)"  GO");
-
+            if (prev_game != game) break;
             //Waiting for users to input
             while ((game == 1) && (winner == 0)) //(game == 1) is also necessary in case we want to change games here
             {
               playing = 1;
               GPIOA->BSRR = (1<<12); //GREEN LED ON while no player has pressed their button yet
               
+              if (prev_game != game) break;
+
               //USE TIMER to count how many secs and add to a variable
               //time_taken = timer_value at break
             }
@@ -576,21 +585,11 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LD4_Pin|LD3_Pin, GPIO_PIN_RESET);
-
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : LD4_Pin LD3_Pin */
-  GPIO_InitStruct.Pin = LD4_Pin|LD3_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }
 

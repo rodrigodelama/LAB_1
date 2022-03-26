@@ -131,10 +131,6 @@ void Error_Handler(void);
 #define SEG4_GPIO_Port GPIOB
 #define SEG5_Pin GPIO_PIN_5
 #define SEG5_GPIO_Port GPIOB
-#define LD4_Pin GPIO_PIN_6
-#define LD4_GPIO_Port GPIOB
-#define LD3_Pin GPIO_PIN_7
-#define LD3_GPIO_Port GPIOB
 #define SEG13_Pin GPIO_PIN_8
 #define SEG13_GPIO_Port GPIOB
 #define COM3_Pin GPIO_PIN_9
