@@ -266,7 +266,7 @@ int main(void)
               GPIOA->BSRR = (1<<12) << 16; //Turn off the LED after a win
               BSP_LCD_GLASS_Clear();
               //format shall be Y user followed by XXXX milliseconds
-              BSP_LCD_GLASS_DisplayString((uint8_t*)(" 1%d", time_taken));
+              BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W"); //(" 1%d", time_taken)
               espera(2*sec); //wait so the player acknowledges their win
               winner = 0; //reset winner for future match
               playing = 0;
@@ -290,6 +290,15 @@ int main(void)
             BSP_LCD_GLASS_Clear();
             BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME2");
             espera(2*sec);
+
+            //COUNTDOWN GAME
+            //users are displayed the countdown in real time, and at a random time (a while before 0)
+            //the countdown isnt displayed, and the users have to attempt to press the button when
+            //the countdown reaches 0
+            //The player with the closest time to 0 will win.
+            //Pressing before the countdown ends will result in displaying -XXXX time left
+            //Pressing after the countdown ends will result in displaying +XXXX time passed
+            //The player to have the closest absolute value to 0, wins
 
           }
         break;
@@ -473,12 +482,13 @@ static void MX_TIM3_Init(void)
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_IC_InitTypeDef sConfigIC = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
 
   /* USER CODE BEGIN TIM3_Init 1 */
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 0;
+  htim3.Init.Prescaler = 31999;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -496,6 +506,10 @@ static void MX_TIM3_Init(void)
   {
     Error_Handler();
   }
+  if (HAL_TIM_OC_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
@@ -510,9 +524,18 @@ static void MX_TIM3_Init(void)
   {
     Error_Handler();
   }
+  sConfigOC.OCMode = TIM_OCMODE_TIMING;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_OC_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN TIM3_Init 2 */
 
   /* USER CODE END TIM3_Init 2 */
+  HAL_TIM_MspPostInit(&htim3);
 
 }
 
