@@ -51,7 +51,7 @@
 
 LCD_HandleTypeDef hlcd;
 
-TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
 //GLOBAL VARS & DEFINITIONS
@@ -70,7 +70,7 @@ static void MX_GPIO_Init(void);
 static void MX_ADC_Init(void);
 static void MX_LCD_Init(void);
 static void MX_TS_Init(void);
-static void MX_TIM3_Init(void);
+static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -85,6 +85,7 @@ void EXTI0_IRQHandler(void)
   {
 	game++; //If at GAME 1, proceed to GAME 2
 	if (game > 2) game = 1; //Reset to 1 after requesting change from GAME 2
+
   }
   //Clear flag must be out of condition so it never hangs if condition is not met
   EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
@@ -93,21 +94,21 @@ void EXTI0_IRQHandler(void)
 // NVIC->ISER[0] pin 23 for EXTIs 5 to 9
 void EXTI5_9_IRQHandler(void) //ISR for EXTI7 & EXTI6
 {
-  if (((EXTI->PR&BIT_7) || (EXTI->PR&BIT_6)) != 0) //(EXTI->PR != 0) //TODO: maybe try (((EXTI->PR&BIT_7) || (EXTI->PR&BIT_6)) != 0)
+  if (EXTI->PR != 0) //TODO: maybe try (((EXTI->PR&BIT_7) || (EXTI->PR&BIT_6)) != 0)
   {
     // BUTTON 1 is pressed, a rising edge is detected in PB7
-    if (EXTI->PR & (1 << 7) && (playing == 1)) // 00000000010000000 in pending register of ISER[0]
+    if (EXTI->PR&BIT_7 && (playing == 1)) // 00000000010000000 in pending register of ISER[0]
     {
       winner = 1;
     }
-    EXTI->PR |= (1 << 7); // Clear the EXTI7 flag (writes a 1 in PR7)
+    EXTI->PR |= BIT_7; // Clear the EXTI7 flag (writes a 1 in PR7)
 
     // BUTTON 2 is pressed, a rising edge is detected in PB6
-    if (EXTI->PR & (1 << 6) && (playing == 1)) // 00000000001000000 in pending register
+    if (EXTI->PR&BIT_6 && (playing == 1)) // 00000000001000000 in pending register
     {
       winner = 2;
     }
-    EXTI->PR |= (1 << 6); // Clear the EXTI6 flag
+    EXTI->PR |= BIT_6; // Clear the EXTI6 flag
   }
 }
 
@@ -160,7 +161,7 @@ int main(void)
   MX_ADC_Init();
   MX_LCD_Init();
   MX_TS_Init();
-  MX_TIM3_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   //DECLARATION OF PERIPHERALS WE WILL USE
 
@@ -191,7 +192,8 @@ int main(void)
   GPIOB->PUPDR |= (1 << (7*2));
   //EXTI7
   EXTI->IMR |= BIT_7; // Enables the interrupt
-  SYSCFG->EXTICR[1] = 0001; // Linking EXTI7 to GPIOB (PB7 = BUTTON 1)
+  SYSCFG->EXTICR[1] |= BIT_12; // Linking EXTI7 to GPIOB (PB7 = BUTTON 1)
+                    // Sets a 1 in bit 12 see page 145 of the manual
   EXTI->RTSR |= BIT_7; // Enables rising edge in EXTI7
   EXTI->FTSR &= ~(BIT_7); // Disables falling edge in EXTI7
   NVIC->ISER[0] |= (1 << 23); // EXTI7 has position 23 in ISER[0]
@@ -204,7 +206,8 @@ int main(void)
   GPIOB->PUPDR |= (1 << (6*2));
   //EXTI6
   EXTI->IMR |= BIT_6; // Enables the interrupt
-  SYSCFG->EXTICR[1] = 0001; // Linking EXTI6 to GPIOB (PB6 = BUTTON 2)
+  SYSCFG->EXTICR[1] |= BIT_8; // Linking EXTI6 to GPIOB (PB6 = BUTTON 2)
+                    // Sets a 1 in bit 8 see page 145 of the manual
   EXTI->RTSR |= BIT_6; // Enables rising edge in EXTI6
   EXTI->FTSR &= ~(BIT_6); // Disables falling edge in EXTI6
   NVIC->ISER[0] |= (1 << 23); // EXTI6 & 7 have position 23 in the NVIC, since
@@ -479,51 +482,46 @@ static void MX_LCD_Init(void)
 }
 
 /**
-  * @brief TIM3 Initialization Function
+  * @brief TIM4 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_TIM3_Init(void)
+static void MX_TIM4_Init(void)
 {
 
-  /* USER CODE BEGIN TIM3_Init 0 */
+  /* USER CODE BEGIN TIM4_Init 0 */
 
-  /* USER CODE END TIM3_Init 0 */
+  /* USER CODE END TIM4_Init 0 */
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_IC_InitTypeDef sConfigIC = {0};
-  TIM_OC_InitTypeDef sConfigOC = {0};
 
-  /* USER CODE BEGIN TIM3_Init 1 */
+  /* USER CODE BEGIN TIM4_Init 1 */
 
-  /* USER CODE END TIM3_Init 1 */
-  htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 31999;
-  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 65535;
-  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  /* USER CODE END TIM4_Init 1 */
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 0;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 65535;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
   {
     Error_Handler();
   }
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
   {
     Error_Handler();
   }
-  if (HAL_TIM_IC_Init(&htim3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_OC_Init(&htim3) != HAL_OK)
+  if (HAL_TIM_IC_Init(&htim4) != HAL_OK)
   {
     Error_Handler();
   }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
   }
@@ -531,22 +529,17 @@ static void MX_TIM3_Init(void)
   sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
   sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
   sConfigIC.ICFilter = 0;
-  if (HAL_TIM_IC_ConfigChannel(&htim3, &sConfigIC, TIM_CHANNEL_3) != HAL_OK)
+  if (HAL_TIM_IC_ConfigChannel(&htim4, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
   {
     Error_Handler();
   }
-  sConfigOC.OCMode = TIM_OCMODE_TIMING;
-  sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_OC_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
+  if (HAL_TIM_IC_ConfigChannel(&htim4, &sConfigIC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN TIM3_Init 2 */
+  /* USER CODE BEGIN TIM4_Init 2 */
 
-  /* USER CODE END TIM3_Init 2 */
-  HAL_TIM_MspPostInit(&htim3);
+  /* USER CODE END TIM4_Init 2 */
 
 }
 
@@ -585,11 +578,21 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
+
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 
