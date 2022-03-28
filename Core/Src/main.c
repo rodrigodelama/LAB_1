@@ -59,6 +59,7 @@ unsigned int prev_game = 0;
 unsigned int game = 1; //game 1 is the starting point
 unsigned int winner = 0; //Init to 0, if it never changes, it will generate an error
 unsigned int playing = 0; // to not activate the interrupts unless we are awaiting
+
 unsigned short init_time = 0;
 int time1;
 unsigned int time_taken = 0;
@@ -86,48 +87,31 @@ void EXTI0_IRQHandler(void)
 	game++; //If at GAME 1, proceed to GAME 2
 	if (game > 2) game = 1; //Reset to 1 after requesting change from GAME 2
 
+  EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
   }
   //Clear flag must be out of condition so it never hangs if condition is not met
-  EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
 }
 
 // NVIC->ISER[0] pin 23 for EXTIs 5 to 9
-void EXTI5_9_IRQHandler(void) //ISR for EXTI7 & EXTI6
+void EXTI9_5_IRQHandler(void) //ISR for EXTI7 & EXTI6
 {
-  if (EXTI->PR != 0) //TODO: maybe try (((EXTI->PR&BIT_7) || (EXTI->PR&BIT_6)) != 0)
+  if (((EXTI->PR&BIT_7) || (EXTI->PR&BIT_6)) != 0) //(EXTI->PR != 0) //TODO: maybe try (((EXTI->PR&BIT_7) || (EXTI->PR&BIT_6)) != 0)
   {
     // BUTTON 1 is pressed, a rising edge is detected in PB7
-    if (EXTI->PR&BIT_7 && (playing == 1)) // 00000000010000000 in pending register of ISER[0]
+    if (EXTI->PR & (1 << 7) && (playing == 1)) // 00000000010000000 in pending register of ISER[0]
     {
       winner = 1;
+      EXTI->PR |= (1 << 7); // Clear the EXTI7 flag (writes a 1 in PR7)
     }
-    EXTI->PR |= BIT_7; // Clear the EXTI7 flag (writes a 1 in PR7)
 
     // BUTTON 2 is pressed, a rising edge is detected in PB6
-    if (EXTI->PR&BIT_6 && (playing == 1)) // 00000000001000000 in pending register
+    if (EXTI->PR & (1 << 6) && (playing == 1)) // 00000000001000000 in pending register
     {
       winner = 2;
+      EXTI->PR |= (1 << 6); // Clear the EXTI6 flag
     }
-    EXTI->PR |= BIT_6; // Clear the EXTI6 flag
   }
 }
-
-/*
-// NVIC->ISER[1] for pins 32 to 63, pin 40 for EXTI15_10
-void EXTI15_10_IRQHandler(void) //ISR for EXTI11 & EXTI12
-{
-  if (EXTI->PR != 0)
-  {
-    //EXTERNAL LED ON
-    if (EXTI->PR &(1 << 12)) // 00010000000000000 in pending register of ISER[1]
-    {
-      //TODO:
-    }
-    EXTI->PR |= (1 << 12); // Clear the EXTI12 flag
-  }
-}
-*/
-
 /* USER CODE END 0 */
 
 /**
@@ -185,6 +169,9 @@ int main(void)
   //PB7 (BUTTON 1) - digital input (00)
   GPIOB->MODER &= ~(1 << (7*2 + 1));
   GPIOB->MODER &= ~(1 << (7*2));
+  //AF for TIM4_CH2
+  GPIOB->AFR[0] |= (0x02 << (7*4)); // Writes 0010 in AFRL7
+  //set gpiob 10 for AFs
   //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ?
   //We chose pull-up: a constant 1 unless we press, then its shorted to GND
   //Set up with pull-up resistor (01)
@@ -194,8 +181,8 @@ int main(void)
   EXTI->IMR |= BIT_7; // Enables the interrupt
   SYSCFG->EXTICR[1] |= BIT_12; // Linking EXTI7 to GPIOB (PB7 = BUTTON 1)
                     // Sets a 1 in bit 12 see page 145 of the manual
-  EXTI->RTSR |= BIT_7; // Enables rising edge in EXTI7
-  EXTI->FTSR &= ~(BIT_7); // Disables falling edge in EXTI7
+  EXTI->RTSR &= ~(BIT_7); // Disables rising edge in EXTI7
+  EXTI->FTSR |= BIT_7; // Enables falling edge in EXTI7
   NVIC->ISER[0] |= (1 << 23); // EXTI7 has position 23 in ISER[0]
 
   //PB6 (BUTTON 2) - digital input (00)
@@ -204,12 +191,14 @@ int main(void)
   //Set up with pull-up resistor (01)
   GPIOB->PUPDR &= ~(1 << (6*2 + 1));
   GPIOB->PUPDR |= (1 << (6*2));
+  //AF for TIM4_CH1
+  GPIOB->AFR[0] |= (0x02 << (6*4)); // Writes 0010 in AFRL6
   //EXTI6
   EXTI->IMR |= BIT_6; // Enables the interrupt
   SYSCFG->EXTICR[1] |= BIT_8; // Linking EXTI6 to GPIOB (PB6 = BUTTON 2)
                     // Sets a 1 in bit 8 see page 145 of the manual
-  EXTI->RTSR |= BIT_6; // Enables rising edge in EXTI6
-  EXTI->FTSR &= ~(BIT_6); // Disables falling edge in EXTI6
+  EXTI->RTSR &= ~(BIT_6); // Disables rising edge in EXTI6
+  EXTI->FTSR |= BIT_6; // Enables falling edge in EXTI6
   NVIC->ISER[0] |= (1 << 23); // EXTI6 & 7 have position 23 in the NVIC, since
 
   //LED
@@ -219,14 +208,6 @@ int main(void)
   //Set up with pull-up resistor (01)
   GPIOA->PUPDR &= ~(1 << (12*2 + 1));
   GPIOA->PUPDR |= (1 << (12*2));
-  /*
-  //EXTI12 - NO NEED, NO INTERACTION W/ LED, JUST ON OR OFF
-  EXTI->IMR |= BIT_12; // Enables the interrupt
-  SYSCFG->EXTICR[3] = 0000; // Linking EXTI12 to GPIOA (PA12 = LED)
-  EXTI->RTSR |= BIT_12; // Enables rising edge in EXTI12
-  EXTI->FTSR &= ~(BIT_12); // Disables falling edge in EXTI12
-  NVIC->ISER[1] |= (1 << (40-32)); // EXTI12 has position 8 in ISER[1]
-  */
 
   /* USER CODE END 2 */
 
@@ -253,20 +234,20 @@ int main(void)
             BSP_LCD_GLASS_Clear(); //Clear LCD
             BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
             espera(2*sec);
-            if (prev_game != game) break;
+            //if (prev_game != game) break;
             //GAME STARTS HERE
             BSP_LCD_GLASS_Clear(); //Not strictly needed since we are printing the same No. of chars to display
             BSP_LCD_GLASS_DisplayString((uint8_t*)" READY");
             espera(2*sec);
-            if (prev_game != game) break;
+            //if (prev_game != game) break;
             BSP_LCD_GLASS_Clear();
             BSP_LCD_GLASS_DisplayString((uint8_t*)"  GO");
-            if (prev_game != game) break;
+            //if (prev_game != game) break;
             //Waiting for users to input
             while ((game == 1) && (winner == 0)) //(game == 1) is also necessary in case we want to change games here
             {
               playing = 1;
-              GPIOA->BSRR = (1<<12); //GREEN LED ON while no player has pressed their button yet
+              GPIOA->BSRR = (1 << 12); // LED ON while no player has pressed their button yet
               
               if (prev_game != game) break;
 
@@ -277,7 +258,7 @@ int main(void)
             //WINNER is determined by the interrupts, they will change the var winner to 1 or 2 respectively
             if (winner == 1)
             {
-              GPIOA->BSRR = (1<<12) << 16; //Turn off the LED after a win
+              GPIOA->BSRR = (1 << 12) << 16; //Turn off the LED after a win
               BSP_LCD_GLASS_Clear();
               //format shall be Y user followed by XXXX milliseconds
               BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W"); //(" 1%d", time_taken)
@@ -287,7 +268,7 @@ int main(void)
             }
             else if (winner == 2) // We use an else if because we only want ONE winner
             {
-              GPIOA->BSRR = (1<<12) << 16;
+              GPIOA->BSRR = (1 << 12) << 16;
               BSP_LCD_GLASS_Clear();
               BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W");
               espera(2*sec);
@@ -320,7 +301,7 @@ int main(void)
         //This code below should be unreachable on purpose
         //Written to acknowledge a logical failure (of our code)
         default:
-          GPIOA->BSRR = (1<<12) << 16;
+          GPIOA->BSRR = (1 << 12) << 16;
           BSP_LCD_GLASS_Clear();
           BSP_LCD_GLASS_DisplayString((uint8_t*)" ERROR");
           espera(2*sec);
@@ -329,6 +310,7 @@ int main(void)
         break;
       }
     }
+  HAL_Delay(50);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -495,7 +477,6 @@ static void MX_TIM4_Init(void)
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_IC_InitTypeDef sConfigIC = {0};
 
   /* USER CODE BEGIN TIM4_Init 1 */
 
@@ -515,25 +496,9 @@ static void MX_TIM4_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_IC_Init(&htim4) != HAL_OK)
-  {
-    Error_Handler();
-  }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
-  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
-  sConfigIC.ICFilter = 0;
-  if (HAL_TIM_IC_ConfigChannel(&htim4, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_IC_ConfigChannel(&htim4, &sConfigIC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
   }
