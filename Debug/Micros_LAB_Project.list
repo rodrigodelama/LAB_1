@@ -37,13 +37,13 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  16 .debug_macro  00014b8f  00000000  00000000  0002d378  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   0000b81a  00000000  00000000  00041f07  2**0
+ 17 .debug_line   0000b816  00000000  00000000  00041f07  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    000837a7  00000000  00000000  0004d721  2**0
+ 18 .debug_str    000837a7  00000000  00000000  0004d71d  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000050  00000000  00000000  000d0ec8  2**0
+ 19 .comment      00000050  00000000  00000000  000d0ec4  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00002a74  00000000  00000000  000d0f18  2**2
+ 20 .debug_frame  00002a74  00000000  00000000  000d0f14  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -393,7 +393,7 @@ void EXTI0_IRQHandler(void)
  80004b2:	695b      	ldr	r3, [r3, #20]
  80004b4:	f003 0301 	and.w	r3, r3, #1
  80004b8:	2b00      	cmp	r3, #0
- 80004ba:	d011      	beq.n	80004e0 <EXTI0_IRQHandler+0x34>
+ 80004ba:	d00b      	beq.n	80004d4 <EXTI0_IRQHandler+0x28>
   {
 	game++; //If at GAME 1, proceed to GAME 2
  80004bc:	4b0b      	ldr	r3, [pc, #44]	; (80004ec <EXTI0_IRQHandler+0x40>)
@@ -409,14 +409,13 @@ void EXTI0_IRQHandler(void)
  80004ce:	4b07      	ldr	r3, [pc, #28]	; (80004ec <EXTI0_IRQHandler+0x40>)
  80004d0:	2201      	movs	r2, #1
  80004d2:	601a      	str	r2, [r3, #0]
-
+  }
   EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
  80004d4:	4b04      	ldr	r3, [pc, #16]	; (80004e8 <EXTI0_IRQHandler+0x3c>)
  80004d6:	695b      	ldr	r3, [r3, #20]
  80004d8:	4a03      	ldr	r2, [pc, #12]	; (80004e8 <EXTI0_IRQHandler+0x3c>)
  80004da:	f043 0340 	orr.w	r3, r3, #64	; 0x40
  80004de:	6153      	str	r3, [r2, #20]
-  }
   //Clear flag must be out of condition so it never hangs if condition is not met
 }
  80004e0:	bf00      	nop
@@ -456,47 +455,46 @@ void EXTI9_5_IRQHandler(void) //ISR for EXTI7 & EXTI6
  8000518:	695b      	ldr	r3, [r3, #20]
  800051a:	f003 0380 	and.w	r3, r3, #128	; 0x80
  800051e:	2b00      	cmp	r3, #0
- 8000520:	d00c      	beq.n	800053c <EXTI9_5_IRQHandler+0x4c>
+ 8000520:	d006      	beq.n	8000530 <EXTI9_5_IRQHandler+0x40>
  8000522:	4b13      	ldr	r3, [pc, #76]	; (8000570 <EXTI9_5_IRQHandler+0x80>)
  8000524:	681b      	ldr	r3, [r3, #0]
  8000526:	2b01      	cmp	r3, #1
- 8000528:	d108      	bne.n	800053c <EXTI9_5_IRQHandler+0x4c>
+ 8000528:	d102      	bne.n	8000530 <EXTI9_5_IRQHandler+0x40>
     {
       winner = 1;
  800052a:	4b12      	ldr	r3, [pc, #72]	; (8000574 <EXTI9_5_IRQHandler+0x84>)
  800052c:	2201      	movs	r2, #1
  800052e:	601a      	str	r2, [r3, #0]
-      EXTI->PR |= (1 << 7); // Clear the EXTI7 flag (writes a 1 in PR7)
- 8000530:	4b0e      	ldr	r3, [pc, #56]	; (800056c <EXTI9_5_IRQHandler+0x7c>)
- 8000532:	695b      	ldr	r3, [r3, #20]
- 8000534:	4a0d      	ldr	r2, [pc, #52]	; (800056c <EXTI9_5_IRQHandler+0x7c>)
- 8000536:	f043 0380 	orr.w	r3, r3, #128	; 0x80
- 800053a:	6153      	str	r3, [r2, #20]
     }
-
     // BUTTON 2 is pressed, a rising edge is detected in PB6
     if (EXTI->PR & (1 << 6) && (playing == 1)) // 00000000001000000 in pending register
- 800053c:	4b0b      	ldr	r3, [pc, #44]	; (800056c <EXTI9_5_IRQHandler+0x7c>)
- 800053e:	695b      	ldr	r3, [r3, #20]
- 8000540:	f003 0340 	and.w	r3, r3, #64	; 0x40
- 8000544:	2b00      	cmp	r3, #0
- 8000546:	d00c      	beq.n	8000562 <EXTI9_5_IRQHandler+0x72>
- 8000548:	4b09      	ldr	r3, [pc, #36]	; (8000570 <EXTI9_5_IRQHandler+0x80>)
- 800054a:	681b      	ldr	r3, [r3, #0]
- 800054c:	2b01      	cmp	r3, #1
- 800054e:	d108      	bne.n	8000562 <EXTI9_5_IRQHandler+0x72>
+ 8000530:	4b0e      	ldr	r3, [pc, #56]	; (800056c <EXTI9_5_IRQHandler+0x7c>)
+ 8000532:	695b      	ldr	r3, [r3, #20]
+ 8000534:	f003 0340 	and.w	r3, r3, #64	; 0x40
+ 8000538:	2b00      	cmp	r3, #0
+ 800053a:	d006      	beq.n	800054a <EXTI9_5_IRQHandler+0x5a>
+ 800053c:	4b0c      	ldr	r3, [pc, #48]	; (8000570 <EXTI9_5_IRQHandler+0x80>)
+ 800053e:	681b      	ldr	r3, [r3, #0]
+ 8000540:	2b01      	cmp	r3, #1
+ 8000542:	d102      	bne.n	800054a <EXTI9_5_IRQHandler+0x5a>
     {
       winner = 2;
- 8000550:	4b08      	ldr	r3, [pc, #32]	; (8000574 <EXTI9_5_IRQHandler+0x84>)
- 8000552:	2202      	movs	r2, #2
- 8000554:	601a      	str	r2, [r3, #0]
-      EXTI->PR |= (1 << 6); // Clear the EXTI6 flag
+ 8000544:	4b0b      	ldr	r3, [pc, #44]	; (8000574 <EXTI9_5_IRQHandler+0x84>)
+ 8000546:	2202      	movs	r2, #2
+ 8000548:	601a      	str	r2, [r3, #0]
+    }
+    EXTI->PR |= (1 << 7); // Clear the EXTI7 flag (writes a 1 in PR7)
+ 800054a:	4b08      	ldr	r3, [pc, #32]	; (800056c <EXTI9_5_IRQHandler+0x7c>)
+ 800054c:	695b      	ldr	r3, [r3, #20]
+ 800054e:	4a07      	ldr	r2, [pc, #28]	; (800056c <EXTI9_5_IRQHandler+0x7c>)
+ 8000550:	f043 0380 	orr.w	r3, r3, #128	; 0x80
+ 8000554:	6153      	str	r3, [r2, #20]
+    EXTI->PR |= (1 << 6); // Clear the EXTI6 flag
  8000556:	4b05      	ldr	r3, [pc, #20]	; (800056c <EXTI9_5_IRQHandler+0x7c>)
  8000558:	695b      	ldr	r3, [r3, #20]
  800055a:	4a04      	ldr	r2, [pc, #16]	; (800056c <EXTI9_5_IRQHandler+0x7c>)
  800055c:	f043 0340 	orr.w	r3, r3, #64	; 0x40
  8000560:	6153      	str	r3, [r2, #20]
-    }
   }
 }
  8000562:	bf00      	nop

@@ -86,9 +86,8 @@ void EXTI0_IRQHandler(void)
   {
 	game++; //If at GAME 1, proceed to GAME 2
 	if (game > 2) game = 1; //Reset to 1 after requesting change from GAME 2
-
-  EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
   }
+  EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
   //Clear flag must be out of condition so it never hangs if condition is not met
 }
 
@@ -101,15 +100,14 @@ void EXTI9_5_IRQHandler(void) //ISR for EXTI7 & EXTI6
     if (EXTI->PR & (1 << 7) && (playing == 1)) // 00000000010000000 in pending register of ISER[0]
     {
       winner = 1;
-      EXTI->PR |= (1 << 7); // Clear the EXTI7 flag (writes a 1 in PR7)
     }
-
     // BUTTON 2 is pressed, a rising edge is detected in PB6
     if (EXTI->PR & (1 << 6) && (playing == 1)) // 00000000001000000 in pending register
     {
       winner = 2;
-      EXTI->PR |= (1 << 6); // Clear the EXTI6 flag
     }
+    EXTI->PR |= (1 << 7); // Clear the EXTI7 flag (writes a 1 in PR7)
+    EXTI->PR |= (1 << 6); // Clear the EXTI6 flag
   }
 }
 /* USER CODE END 0 */
@@ -127,7 +125,7 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+   HAL_Init();
 
   /* USER CODE BEGIN Init */
 
