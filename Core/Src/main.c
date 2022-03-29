@@ -51,20 +51,25 @@
 
 LCD_HandleTypeDef hlcd;
 
+TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
 //GLOBAL VARS & DEFINITIONS
+//game vars
 unsigned int prev_game = 0;
 unsigned int game = 1; //game 1 is the starting point
 unsigned int winner = 0; //Init to 0, if it never changes, it will generate an error
 unsigned int playing = 0; // to not activate the interrupts unless we are awaiting
 
+//timer vars
+/* ideas for timer variables
 unsigned int led_timer = sec; //minimum 1 sec
-
 unsigned short init_time = 0;
-int time1;
+unsigned int time1;
 unsigned int time_taken = 0;
+*/
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -73,6 +78,7 @@ static void MX_GPIO_Init(void);
 static void MX_ADC_Init(void);
 static void MX_LCD_Init(void);
 static void MX_TS_Init(void);
+static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -86,17 +92,17 @@ void EXTI0_IRQHandler(void)
   // USER BUTTON is pressed, a rising edge is detected in PA0
   if ((EXTI->PR&BIT_0) != 0) // Is EXTI0 flag on? //0000000000000001 in the Pending Register of ISER[0]
   {
-	game++; //If at GAME 1, proceed to GAME 2
-	if (game > 2) game = 1; //Reset to 1 after requesting change from GAME 2
+	  game++; //If at GAME 1, proceed to GAME 2
+	  if (game > 2) game = 1; //Reset to 1 after requesting change from GAME 2
   }
   EXTI->PR |= (1 << 6); // Clear EXTI0 flag (writes a 1 in PR0 pos)
   //Clear flag must be out of condition so it never hangs if condition is not met
 }
 
-// NVIC->ISER[0] pin 23 for EXTIs 5 to 9
+// NVIC->ISER[0] pin 23 for EXTIs 9 to 5
 void EXTI9_5_IRQHandler(void) //ISR for EXTI7 & EXTI6
 {
-  if (((EXTI->PR&BIT_7) || (EXTI->PR&BIT_6)) != 0) //(EXTI->PR != 0) //TODO: maybe try (((EXTI->PR&BIT_7) || (EXTI->PR&BIT_6)) != 0)
+  if (((EXTI->PR&BIT_7) || (EXTI->PR&BIT_6)) != 0) //most general aproach --> (EXTI->PR != 0)
   {
     // BUTTON 1 is pressed, a rising edge is detected in PB7
     if (EXTI->PR & (1 << 7) && (playing == 1)) // 00000000010000000 in pending register of ISER[0]
@@ -108,9 +114,10 @@ void EXTI9_5_IRQHandler(void) //ISR for EXTI7 & EXTI6
     {
       winner = 2;
     }
-    EXTI->PR |= (1 << 7); // Clear the EXTI7 flag (writes a 1 in PR7)
-    EXTI->PR |= (1 << 6); // Clear the EXTI6 flag
   }
+  //Always clear flags to avoid hanging
+  EXTI->PR |= (1 << 7); // Clear the EXTI7 flag (writes a 1 in PR7)
+  EXTI->PR |= (1 << 6); // Clear the EXTI6 flag
 }
 
 //TIMERS
@@ -157,6 +164,7 @@ int main(void)
   MX_ADC_Init();
   MX_LCD_Init();
   MX_TS_Init();
+  MX_TIM3_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   //DECLARATION OF PERIPHERALS WE WILL USE
@@ -574,6 +582,59 @@ static void MX_LCD_Init(void)
 }
 
 /**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 0;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 65535;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_OC_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_TIMING;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_OC_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OC_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+  HAL_TIM_MspPostInit(&htim3);
+
+}
+
+/**
   * @brief TIM4 Initialization Function
   * @param None
   * @retval None
@@ -661,14 +722,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PB0 PB1 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PA12 */
   GPIO_InitStruct.Pin = GPIO_PIN_12;
