@@ -228,7 +228,7 @@ int main(void)
 
   //TIMERS
   /* TIM 4 -------------------------------------------------------------------*/
-  //SET-UP for TIM4 - TICs
+  //SET-UP for TIMs 4, CH1 & CH2 - TICs
   TIM4->CR1 = 0x0001; //Set to 1 for Counter Enable ON
                       //ARPE off because NOT PWM
   TIM4->CR2 = 0x0000; //Always set to 0
@@ -237,7 +237,7 @@ int main(void)
   //CMMR1 for ch1 and ch2
 
   /* TIM3 --------------------------------------------------------------------*/
-  //SET-UP for TIM3 - TOC for random LED off
+  //SET-UP for TIMs 3, CH3 & CH4 - TOCs, for random LED off and TBD
   TIM3->CR1 = 0x0001;
   TIM3->CR2 = 0x0000; //Always set to 0
   TIM3->SMCR = 0x0000; //Always set to 0
@@ -298,9 +298,13 @@ int main(void)
             BSP_LCD_GLASS_DisplayString((uint8_t*)"  GO");
             //if (prev_game != game) break;
             //Waiting for users to input
+
+            //random num generator lower than 10000 (ten thousand) - 10 secs to 
+
             while ((game == 1) && (winner == 0)) //(game == 1) is also necessary in case we want to change games here
             {
               playing = 1;
+              // 10 secs to LED1 OFF
               //When random timer reaches zero
               // if (led_timer == 0)
               GPIOA->BSRR = (1 << 12); // LED ON while no player has pressed their button yet
