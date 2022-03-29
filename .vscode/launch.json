@@ -5,13 +5,11 @@
       "name": "C/C++ Runner: Debug Session",
       "type": "cppdbg",
       "request": "launch",
-      "args": [
-        ""
-      ],
+      "args": [],
       "stopAtEntry": false,
-      "cwd": "c:/Users/rodri/OneDrive - Universidad Carlos III de Madrid/Microprocessor Based Digital Systems/code/LAB_1",
+      "cwd": "c:/Users/rodri/OneDrive - Universidad Carlos III de Madrid/Microprocessor Based Digital Systems/code/LAB_1/Core/Src",
       "environment": [],
-      "program": "c:/Users/rodri/OneDrive - Universidad Carlos III de Madrid/Microprocessor Based Digital Systems/code/LAB_1/build/Debug/outDebug",
+      "program": "c:/Users/rodri/OneDrive - Universidad Carlos III de Madrid/Microprocessor Based Digital Systems/code/LAB_1/Core/Src/build/Debug/outDebug",
       "internalConsoleOptions": "openOnSessionStart",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",

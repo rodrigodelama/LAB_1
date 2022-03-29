@@ -51,6 +51,7 @@
 
 LCD_HandleTypeDef hlcd;
 
+TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
@@ -59,6 +60,8 @@ unsigned int prev_game = 0;
 unsigned int game = 1; //game 1 is the starting point
 unsigned int winner = 0; //Init to 0, if it never changes, it will generate an error
 unsigned int playing = 0; // to not activate the interrupts unless we are awaiting
+
+unsigned int led_timer = sec; //minimum 1 sec
 
 unsigned short init_time = 0;
 int time1;
@@ -71,6 +74,7 @@ static void MX_GPIO_Init(void);
 static void MX_ADC_Init(void);
 static void MX_LCD_Init(void);
 static void MX_TS_Init(void);
+static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -110,6 +114,18 @@ void EXTI9_5_IRQHandler(void) //ISR for EXTI7 & EXTI6
     EXTI->PR |= (1 << 6); // Clear the EXTI6 flag
   }
 }
+
+//TIMERS
+//timers TOC timer 3 ch4
+void TIM3_IRQHandler(void)
+{
+
+}
+//timers TIC timer 4 ch1 and ch2
+void TIM4_IRQHandler(void)
+{
+
+}
 /* USER CODE END 0 */
 
 /**
@@ -125,7 +141,7 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-   HAL_Init();
+  HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -143,6 +159,7 @@ int main(void)
   MX_ADC_Init();
   MX_LCD_Init();
   MX_TS_Init();
+  MX_TIM3_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   //DECLARATION OF PERIPHERALS WE WILL USE
@@ -153,6 +170,7 @@ int main(void)
   BSP_LCD_GLASS_Clear();
 
   //Pins + their EXTIs - I/O
+  /* PB0 ---------------------------------------------------------------------*/
   //PA0 (USER BUTTON) - digital input (00)
   GPIOA->MODER &= ~(1 << (0*2 + 1));
   GPIOA->MODER &= ~(1 << (0*2));
@@ -162,14 +180,15 @@ int main(void)
   EXTI->RTSR |= BIT_0; // Enables rising edge in EXTI0
   EXTI->FTSR &= ~(BIT_0); // Disables falling edge in EXTI0
   NVIC->ISER[0] |= (1 << 6); //Enables EXTI0 in the NVICs ISER[0]s position 6
-
+  
   //USING I/O PINS 7 & 6 FOR PLAYER BUTTONS 1 & 2 RESPECTIVELY
+  /* PB7 ---------------------------------------------------------------------*/
   //PB7 (BUTTON 1) - digital input (00)
-  GPIOB->MODER &= ~(1 << (7*2 + 1));
+  //Set PB7 to 10 for Alternate Functions (AFs)
+  GPIOB->MODER |= (1 << (7*2 + 1));
   GPIOB->MODER &= ~(1 << (7*2));
   //AF for TIM4_CH2
   GPIOB->AFR[0] |= (0x02 << (7*4)); // Writes 0010 in AFRL7
-  //set gpiob 10 for AFs
   //WE NEED INTERNAL RESISTORS - pull-up OR pull-down ?
   //We chose pull-up: a constant 1 unless we press, then its shorted to GND
   //Set up with pull-up resistor (01)
@@ -183,8 +202,11 @@ int main(void)
   EXTI->FTSR |= BIT_7; // Enables falling edge in EXTI7
   NVIC->ISER[0] |= (1 << 23); // EXTI7 has position 23 in ISER[0]
 
+  /* PB6 ---------------------------------------------------------------------*/
   //PB6 (BUTTON 2) - digital input (00)
-  GPIOB->MODER &= ~(1 << (6*2 + 1));
+  //TIM4_CH1
+  //Set PB6 to 10 for AFs
+  GPIOB->MODER |= (1 << (6*2 + 1));
   GPIOB->MODER &= ~(1 << (6*2));
   //Set up with pull-up resistor (01)
   GPIOB->PUPDR &= ~(1 << (6*2 + 1));
@@ -199,13 +221,36 @@ int main(void)
   EXTI->FTSR |= BIT_6; // Enables falling edge in EXTI6
   NVIC->ISER[0] |= (1 << 23); // EXTI6 & 7 have position 23 in the NVIC, since
 
-  //LED
-  //PA12 (EXTERNAL LED) - digital output (01)
+  //TIMERS
+  /* TIM 4 -------------------------------------------------------------------*/
+  //SET-UP for TIM4 - TICs
+  TIM4->CR1 = 0x0001; //Set to 1 for Counter Enable ON
+                      //ARPE off because NOT PWM
+  TIM4->CR2 = 0x0000; //Always set to 0
+  TIM4->SMCR = 0x0000; //Always set to 0
+  //CMMR1 for ch1 and ch2
+
+  /* TIM3 --------------------------------------------------------------------*/
+  //SET-UP for TIM3 - TOC for random LED off
+  TIM3->CR1 = 0x0001;
+  TIM4->CR2 = 0x0000; //Always set to 0
+  TIM4->SMCR = 0x0000; //Always set to 0
+
+  /* LEDs ---------------------------------------------------------------------*/
+  //LED1
+  //PA12 (EXTERNAL LED1) - digital output (01)
   GPIOA->MODER &= ~(1 << (12*2 + 1));
   GPIOA->MODER |= (1 << (12*2));
   //Set up with pull-up resistor (01)
   GPIOA->PUPDR &= ~(1 << (12*2 + 1));
   GPIOA->PUPDR |= (1 << (12*2));
+  //LED2
+  //PD2 (EXTERNAL LED2) - digital output (01)
+  GPIOD->MODER &= ~(1 << (2*2 + 1));
+  GPIOD->MODER |= (1 << (2*2));
+  //Set up with pull-up resistor (01)
+  GPIOD->PUPDR &= ~(1 << (2*2 + 1));
+  GPIOD->PUPDR |= (1 << (2*2));
 
   /* USER CODE END 2 */
 
@@ -245,6 +290,8 @@ int main(void)
             while ((game == 1) && (winner == 0)) //(game == 1) is also necessary in case we want to change games here
             {
               playing = 1;
+              //When random timer reaches zero
+              // if (led_timer == 0)
               GPIOA->BSRR = (1 << 12); // LED ON while no player has pressed their button yet
               
               if (prev_game != game) break;
@@ -458,6 +505,55 @@ static void MX_LCD_Init(void)
   /* USER CODE BEGIN LCD_Init 2 */
 
   /* USER CODE END LCD_Init 2 */
+
+}
+
+/**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 31999;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 65535;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_OC_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_TIMING;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_OC_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+  HAL_TIM_MspPostInit(&htim3);
 
 }
 
