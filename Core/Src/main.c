@@ -51,7 +51,6 @@
 
 LCD_HandleTypeDef hlcd;
 
-TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
@@ -74,7 +73,6 @@ static void MX_GPIO_Init(void);
 static void MX_ADC_Init(void);
 static void MX_LCD_Init(void);
 static void MX_TS_Init(void);
-static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -159,7 +157,6 @@ int main(void)
   MX_ADC_Init();
   MX_LCD_Init();
   MX_TS_Init();
-  MX_TIM3_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   //DECLARATION OF PERIPHERALS WE WILL USE
@@ -228,13 +225,19 @@ int main(void)
                       //ARPE off because NOT PWM
   TIM4->CR2 = 0x0000; //Always set to 0
   TIM4->SMCR = 0x0000; //Always set to 0
+
   //CMMR1 for ch1 and ch2
 
   /* TIM3 --------------------------------------------------------------------*/
   //SET-UP for TIM3 - TOC for random LED off
   TIM3->CR1 = 0x0001;
-  TIM4->CR2 = 0x0000; //Always set to 0
-  TIM4->SMCR = 0x0000; //Always set to 0
+  TIM3->CR2 = 0x0000; //Always set to 0
+  TIM3->SMCR = 0x0000; //Always set to 0
+  TIM3->PSC = 31999; //Means fclk/(PSC+1)
+  TIM3->CNT = 0;
+  TIM3->ARR = 0xFFFF; //USED IN PWN
+  TIM3->CCR4 = rand_value_where_we_stop; //It will always be lower than 0xFFFF (65,535 > 10,000)
+                   //Our max time value will be 10secs
 
   /* LEDs ---------------------------------------------------------------------*/
   //LED1
@@ -305,17 +308,21 @@ int main(void)
             {
               GPIOA->BSRR = (1 << 12) << 16; //Turn off the LED after a win
               BSP_LCD_GLASS_Clear();
+              
               //format shall be Y user followed by XXXX milliseconds
               BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W"); //(" 1%d", time_taken)
+
               espera(2*sec); //wait so the player acknowledges their win
               winner = 0; //reset winner for future match
               playing = 0;
+              //reset timers? or do we reset at the start of each game?
             }
             else if (winner == 2) // We use an else if because we only want ONE winner
             {
               GPIOA->BSRR = (1 << 12) << 16;
               BSP_LCD_GLASS_Clear();
               BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W");
+
               espera(2*sec);
               winner = 0;
               playing = 0;
@@ -326,20 +333,78 @@ int main(void)
         case 2: // GAME 2 - COUNTDOWN
           while (game == 2)
           {
+            //Winning LEDs shall be initially off
+            GPIOA->BSRR = (1 << 12) << 16;
+            GPIOD->BSRR = (1 << 2) << 16;
+
             //TODO: COUNTDOWN
             BSP_LCD_GLASS_Clear();
             BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME2");
             espera(2*sec);
+            //if (prev_game != game) break;
 
             //COUNTDOWN GAME
-            //users are displayed the countdown in real time, and at a random time (a while before 0)
-            //the countdown isnt displayed, and the users have to attempt to press the button when
-            //the countdown reaches 0
-            //The player with the closest time to 0 will win.
+            //users are displayed the countdown in real time from 10 in real time
+            //at a random time (a while before 0)
+            //the countdown STOPS being displayed
+            //the users have to attempt to press the button when the countdown reaches 0
+
+            //The player with the closest time to 0 will win
             //Pressing before the countdown ends will result in displaying -XXXX time left
             //Pressing after the countdown ends will result in displaying +XXXX time passed
             //The player to have the closest absolute value to 0, wins
 
+            //REVIEW BELOW
+            //Determine OVERTIME or UNDERTIME with TOC minus TIC
+            //undertime if TIM3 hasnt reached 0 so do operation (time_to_zero - input_time)
+
+            BSP_LCD_GLASS_Clear();
+            BSP_LCD_GLASS_DisplayString((uint8_t*)" READY");
+            espera(2*sec);
+            //if (prev_game != game) break;
+            BSP_LCD_GLASS_Clear();
+            BSP_LCD_GLASS_DisplayString((uint8_t*)" SET");
+
+            //NOT A WHILE - Not waiting, just counting
+            //We want a continuously running game (20 seconds max of waiting for user input)
+            if ((winner == 0) && (tim4_TICs << 20*sec)) //if wait to press is longer than 20 secs after countdown = 0, abort and restart game
+            {
+              //start countdown with tim3_ch3
+              if (prev_game != game) break;
+              playing = 1;
+              //When random timer reaches zero STOP LCD DISPLAY
+              //keep counting down though
+              // if lcd_on != 0 keep on displaying, else kill lcd
+
+              if (winner == 1)
+              {
+                GPIOA->BSRR = (1 << 12); //Turn ON LED1 for P1 win
+                BSP_LCD_GLASS_Clear();
+                
+                //format shall be Y user followed by XXXX milliseconds
+                BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W"); //(" 1%d", time_taken)
+
+                espera(2*sec); //wait so the player acknowledges their win
+                winner = 0; //reset winner for future match
+                playing = 0;
+                //reset timers? or do we reset at the start of each game?
+              }
+              else if (winner == 2) // We use an else if because we only want ONE winner
+              {
+                GPIOD->BSRR = (1 << 2); //Turn ON LED2 for P2 win
+                BSP_LCD_GLASS_Clear();
+                BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W");
+
+                espera(2*sec);
+                winner = 0;
+                playing = 0;
+              }
+              //Retry message for when players take more than 20 post countdown reaching 0 to react
+              if (tim4_TICs << 30*sec) BSP_LCD_GLASS_DisplayString((uint8_t*)" RETRY");
+
+              //USE TIMER to count how many secs and add to a variable
+              //time_taken = timer_value at break
+            }
           }
         break;
 
@@ -355,7 +420,7 @@ int main(void)
         break;
       }
     }
-  HAL_Delay(50);
+  HAL_Delay(50); //to avoid button bouncing
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -509,55 +574,6 @@ static void MX_LCD_Init(void)
 }
 
 /**
-  * @brief TIM3 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM3_Init(void)
-{
-
-  /* USER CODE BEGIN TIM3_Init 0 */
-
-  /* USER CODE END TIM3_Init 0 */
-
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_OC_InitTypeDef sConfigOC = {0};
-
-  /* USER CODE BEGIN TIM3_Init 1 */
-
-  /* USER CODE END TIM3_Init 1 */
-  htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 31999;
-  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 65535;
-  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_OC_Init(&htim3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigOC.OCMode = TIM_OCMODE_TIMING;
-  sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_OC_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM3_Init 2 */
-
-  /* USER CODE END TIM3_Init 2 */
-  HAL_TIM_MspPostInit(&htim3);
-
-}
-
-/**
   * @brief TIM4 Initialization Function
   * @param None
   * @retval None
@@ -645,6 +661,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PB0 PB1 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PA12 */
   GPIO_InitStruct.Pin = GPIO_PIN_12;
