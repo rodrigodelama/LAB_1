@@ -51,7 +51,6 @@
 
 LCD_HandleTypeDef hlcd;
 
-TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
@@ -78,7 +77,6 @@ static void MX_GPIO_Init(void);
 static void MX_ADC_Init(void);
 static void MX_LCD_Init(void);
 static void MX_TS_Init(void);
-static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -164,7 +162,6 @@ int main(void)
   MX_ADC_Init();
   MX_LCD_Init();
   MX_TS_Init();
-  MX_TIM3_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   //DECLARATION OF PERIPHERALS WE WILL USE
@@ -235,6 +232,8 @@ int main(void)
   TIM4->SMCR = 0x0000; //Always set to 0
 
   //CMMR1 for ch1 and ch2
+  //activate I/O here 
+  //TIC ojo con la entrada
 
   /* TIM3 --------------------------------------------------------------------*/
   //SET-UP for TIMs 3, CH3 & CH4 - TOCs, for random LED off and TBD
@@ -276,9 +275,12 @@ int main(void)
 
     //Global IF condition, so we may immediately switch between games
     //(a WHILE would force us to finish the code execution inside)
+    
+    //reset all 
+    GPIOA->BSRR = (1<<12) << 16; //in case the game mode was changed while awaiting input in GAME 1
+    
     if (prev_game != game)
     {
-      GPIOA->BSRR = (1<<12) << 16; //in case the game mode was changed while awaiting input in GAME 1
       prev_game = game;
       switch(game)
       {
@@ -382,8 +384,8 @@ int main(void)
             BSP_LCD_GLASS_DisplayString((uint8_t*)" SET");
 
             //NOT A WHILE - Not waiting, just counting
-            //We want a continuously running game (20 seconds max of waiting for user input)
-            if ((winner == 0) && (tim4_TICs << 20*sec)) //if wait to press is longer than 20 secs after countdown = 0, abort and restart game
+            //We want a continuously running game (3 seconds max of waiting for user input)
+            if ((winner == 0) && (tim4_TICs << 3*sec)) //if wait to press is longer than 3 secs after countdown = 0, abort and restart game
             {
               //start countdown with tim3_ch3
               if (prev_game != game) break;
@@ -588,59 +590,6 @@ static void MX_LCD_Init(void)
   /* USER CODE BEGIN LCD_Init 2 */
 
   /* USER CODE END LCD_Init 2 */
-
-}
-
-/**
-  * @brief TIM3 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM3_Init(void)
-{
-
-  /* USER CODE BEGIN TIM3_Init 0 */
-
-  /* USER CODE END TIM3_Init 0 */
-
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_OC_InitTypeDef sConfigOC = {0};
-
-  /* USER CODE BEGIN TIM3_Init 1 */
-
-  /* USER CODE END TIM3_Init 1 */
-  htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 0;
-  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 65535;
-  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_OC_Init(&htim3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigOC.OCMode = TIM_OCMODE_TIMING;
-  sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_OC_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_OC_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM3_Init 2 */
-
-  /* USER CODE END TIM3_Init 2 */
-  HAL_TIM_MspPostInit(&htim3);
 
 }
 
