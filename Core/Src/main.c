@@ -318,9 +318,10 @@ int main(void)
     //Global IF condition, so we may immediately switch between games
     //(a WHILE would force us to finish the code execution inside)
     
-    //reset all 
-    GPIOA->BSRR = (1<<12) << 16; //in case the game mode was changed while awaiting input in GAME 1
-    
+    //All LEDs shall be initially off - when changing game modes, upon a restart of the main while loop
+    GPIOA->BSRR = (1 << 12) << 16;
+    GPIOD->BSRR = (1 << 2) << 16;
+
     if (prev_game != game)
     {
       prev_game = game;
@@ -350,8 +351,6 @@ int main(void)
               playing = 1;
               if (prev_game != game) break; //FIXME: Not sure if needed
               //Start timer
-
-              //
 
               //Before 10 secs at ANY time, LED1 ON
               //Random timer reaches zero - led
@@ -397,10 +396,6 @@ int main(void)
         case 2: // GAME 2 - COUNTDOWN
           while (game == 2)
           {
-            //Winning LEDs shall be initially off
-            GPIOA->BSRR = (1 << 12) << 16;
-            GPIOD->BSRR = (1 << 2) << 16;
-
             //TODO: COUNTDOWN
             BSP_LCD_GLASS_Clear();
             BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME2");
