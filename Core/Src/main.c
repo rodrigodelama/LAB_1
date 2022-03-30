@@ -392,6 +392,8 @@ int main(void)
               //keep counting down though
               // if lcd_on != 0 keep on displaying, else kill lcd
 
+              //send an array of ASCII code for the countdown
+
               if (winner == 1)
               {
                 GPIOA->BSRR = (1 << 12); //Turn ON LED1 for P1 win
