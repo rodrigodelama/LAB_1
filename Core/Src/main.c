@@ -63,6 +63,8 @@ unsigned int playing = 0; // to not activate the interrupts unless we are awaiti
 
 //timer vars
 int countdown[] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+//unsigned int game1_rand;
+
 /* ideas for timer variables
 unsigned int led_timer = sec; //minimum 1 sec
 unsigned short init_time = 0;
@@ -128,17 +130,20 @@ void TIM3_IRQHandler(void)
  *             //here?
             TIM3->CCR = random_num(0, 10000);
  */
+  //we possibly should not care, just use ch1 for game 1, ch2 for game 2
   if ((TIM3->SR & BIT_1) != 0)
   {
     switch (game)
     {
     case 1:
       //for led shutoff
+      //game1_rand = random_num(0, 10000);
+      //TIM3->CCR1 = game1_rand;
       TIM3->CCR1 = random_num(0, 10000);
     break;
 
     case 2:
-      //TIM3->CCR1 = tbd; 
+      //TIM3->CCR1 from 0 to 10000
     break;
     
     default:
@@ -246,6 +251,18 @@ int main(void)
   NVIC->ISER[0] |= (1 << 23); // EXTI6 & 7 have position 23 in the NVIC, since
 
   //TIMERS
+  /* TIM3 --------------------------------------------------------------------*/
+  //No pin assignment, we just plainly use it for the TOC
+  //SET-UP for TIMs 3, CH3 & CH4 - TOCs, for random LED off and TBD
+  TIM3->CR1 = 0x0001;
+  TIM3->CR2 = 0x0000; //Always set to 0
+  TIM3->SMCR = 0x0000; //Always set to 0
+  TIM3->PSC = 31999;
+  TIM3->CNT = 0;
+  TIM3->ARR = 0xFFFF; //USED IN PWN
+
+  TIM3->DIER |= BIT_0; //activated IRQ for channel 1
+
   /* TIM 4 -------------------------------------------------------------------*/
   //Assigned to PB7 and PB7
   //SET-UP for TIMs 4, CH1 & CH2 - TICs
@@ -253,24 +270,23 @@ int main(void)
                       //ARPE off because NOT PWM
   TIM4->CR2 = 0x0000; //Always set to 0
   TIM4->SMCR = 0x0000; //Always set to 0
+  TIM4->PSC = 31999; //Means fclk/(PSC+1)
+  TIM4->CNT = 0;
+  TIM4->ARR = 0xFFFF; //USED IN PWN
 
+  //FIXME:
+  TIM3->DIER |= ((1 << 2) & (1 << 3)); //activated IRQ for channels 3 and 4 ???
+
+  /* COMMENTS ----------------------------------------------------------------*/
   //CCMR1 for ch1 and ch2
   //CCMR2 for ch3 and ch4
   
   //activate I/O here 
   //TIC ojo con la entrada
 
-  /* TIM3 --------------------------------------------------------------------*/
-  //No pin assignment, we just plainly use it for the TOC
-  //SET-UP for TIMs 3, CH3 & CH4 - TOCs, for random LED off and TBD
-  TIM3->CR1 = 0x0001;
-  TIM3->CR2 = 0x0000; //Always set to 0
-  TIM3->SMCR = 0x0000; //Always set to 0
-  TIM3->PSC = 31999; //Means fclk/(PSC+1)
-  TIM3->CNT = 0;
-  TIM3->ARR = 0xFFFF; //USED IN PWN
-  TIM3->CCR4 = rand_value_where_we_stop; //It will always be lower than 0xFFFF (65,535 > 10,000)
-                   //Our max time value will be 10secs
+  // CCR4 
+  // TIM3->CCR4 = rand_value_where_we_stop; //It will always be lower than 0xFFFF (65,535 > 10,000)
+                  //Our max time value will be 10secs
 
   /* LEDs ---------------------------------------------------------------------*/
   //LED1
@@ -313,8 +329,6 @@ int main(void)
         case 1: // GAME 1 - REACTION TIME
           while (game == 1)
           {
-
-
             BSP_LCD_GLASS_Clear(); //Clear LCD
             BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
             espera(2*sec);
@@ -334,10 +348,14 @@ int main(void)
             while ((game == 1) && (winner == 0)) //(game == 1) is also necessary in case we want to change games here
             {
               playing = 1;
-              //Before 10 secs at ANY time, LED1 ON
               if (prev_game != game) break; //FIXME: Not sure if needed
+              //Start timer
+
+              //
+
+              //Before 10 secs at ANY time, LED1 ON
               //Random timer reaches zero - led
-              if (led_timer_2_off == 0)
+              if ((TIM3->CNT) == (TIM3->CCR1))
               {
                 while (winner == 0)
                 {
