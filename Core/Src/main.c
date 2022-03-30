@@ -62,6 +62,7 @@ unsigned int winner = 0; //Init to 0, if it never changes, it will generate an e
 unsigned int playing = 0; // to not activate the interrupts unless we are awaiting
 
 //timer vars
+int countdown[] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
 /* ideas for timer variables
 unsigned int led_timer = sec; //minimum 1 sec
 unsigned short init_time = 0;
@@ -225,6 +226,7 @@ int main(void)
 
   //TIMERS
   /* TIM 4 -------------------------------------------------------------------*/
+  //Assigned to PB7 and PB7
   //SET-UP for TIMs 4, CH1 & CH2 - TICs
   TIM4->CR1 = 0x0001; //Set to 1 for Counter Enable ON
                       //ARPE off because NOT PWM
@@ -236,6 +238,7 @@ int main(void)
   //TIC ojo con la entrada
 
   /* TIM3 --------------------------------------------------------------------*/
+  //No pin assignment, we just plainly use it for the TOC
   //SET-UP for TIMs 3, CH3 & CH4 - TOCs, for random LED off and TBD
   TIM3->CR1 = 0x0001;
   TIM3->CR2 = 0x0000; //Always set to 0
