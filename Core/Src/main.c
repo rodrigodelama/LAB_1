@@ -123,7 +123,28 @@ void EXTI9_5_IRQHandler(void) //ISR for EXTI7 & EXTI6
 //timers TOC timer 3 ch4
 void TIM3_IRQHandler(void)
 {
+/**
+ * @brief 
+ *             //here?
+            TIM3->CCR = random_num(0, 10000);
+ */
+  if ((TIM3->SR & BIT_1) != 0)
+  {
+    switch (game)
+    {
+    case 1:
+      //for led shutoff
+      TIM3->CCR1 = random_num(0, 10000);
+    break;
 
+    case 2:
+      //TIM3->CCR1 = tbd; 
+    break;
+    
+    default:
+      break;
+    }
+  }
 }
 //timers TIC timer 4 ch1 and ch2
 void TIM4_IRQHandler(void)
@@ -233,7 +254,9 @@ int main(void)
   TIM4->CR2 = 0x0000; //Always set to 0
   TIM4->SMCR = 0x0000; //Always set to 0
 
-  //CMMR1 for ch1 and ch2
+  //CCMR1 for ch1 and ch2
+  //CCMR2 for ch3 and ch4
+  
   //activate I/O here 
   //TIC ojo con la entrada
 
@@ -290,6 +313,8 @@ int main(void)
         case 1: // GAME 1 - REACTION TIME
           while (game == 1)
           {
+
+
             BSP_LCD_GLASS_Clear(); //Clear LCD
             BSP_LCD_GLASS_DisplayString((uint8_t*)" GAME1");
             espera(2*sec);

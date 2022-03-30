@@ -20,3 +20,9 @@ void Bin2Ascii(unsigned short number, unsigned char* chain)
   }
   *(chain + 6) = 0;
 }
+
+// Credit goes to GeeksForGeeks - https://www.geeksforgeeks.org/generating-random-number-range-c/
+void random_num(int lower_limit, int upper_limit)
+{
+  int num = (rand() % (upper_limit - lower_limit + 1)) + lower_limit;
+}
