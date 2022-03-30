@@ -254,7 +254,7 @@ int main(void)
   /* TIM3 --------------------------------------------------------------------*/
   //No pin assignment, we just plainly use it for the TOC
   //SET-UP for TIMs 3, CH3 & CH4 - TOCs, for random LED off and TBD
-  TIM3->CR1 = 0x0001;
+  //TIM3->CR1 = 0x0001; // DONE IN CODE BELOW
   TIM3->CR2 = 0x0000; //Always set to 0
   TIM3->SMCR = 0x0000; //Always set to 0
   TIM3->PSC = 31999;
@@ -266,7 +266,7 @@ int main(void)
   /* TIM 4 -------------------------------------------------------------------*/
   //Assigned to PB7 and PB7
   //SET-UP for TIMs 4, CH1 & CH2 - TICs
-  TIM4->CR1 = 0x0001; //Set to 1 for Counter Enable ON
+  //TIM4->CR1 = 0x0001; //Set to 1 for Counter ON - DONE IN CODE BELOW
                       //ARPE off because NOT PWM
   TIM4->CR2 = 0x0000; //Always set to 0
   TIM4->SMCR = 0x0000; //Always set to 0
@@ -322,6 +322,10 @@ int main(void)
     GPIOA->BSRR = (1 << 12) << 16;
     GPIOD->BSRR = (1 << 2) << 16;
 
+    //Clear all timer flags to be used
+    TIM4->SR = 0; // CLEAR FLAGS
+    TIM3->SR = 0;
+
     if (prev_game != game)
     {
       prev_game = game;
@@ -350,7 +354,10 @@ int main(void)
             {
               playing = 1;
               if (prev_game != game) break; //FIXME: Not sure if needed
-              //Start timer
+
+              //Start counter
+              TIM3->CR1 |= BIT_0; //start counting
+              TIM3->EGR |= BIT_0; //updates all TIM registers
 
               //Before 10 secs at ANY time, LED1 ON
               //Random timer reaches zero - led
