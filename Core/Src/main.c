@@ -304,15 +304,19 @@ int main(void)
             while ((game == 1) && (winner == 0)) //(game == 1) is also necessary in case we want to change games here
             {
               playing = 1;
-              // 10 secs to LED1 OFF
-              //When random timer reaches zero
-              // if (led_timer == 0)
-              GPIOA->BSRR = (1 << 12); // LED ON while no player has pressed their button yet
-              
+              //Before 10 secs at ANY time, LED1 ON
+              if (prev_game != game) break; //FIXME: Not sure if needed
+              //Random timer reaches zero - led
+              if (led_timer_2_off == 0)
+              {
+                while (winner == 0)
+                {
+                  GPIOA->BSRR = (1 << 12); // LED ON while no player has pressed their button yet
+                  
+                  if (prev_game != game) break;
+                }
+              }
               if (prev_game != game) break;
-
-              //USE TIMER to count how many secs and add to a variable
-              //time_taken = timer_value at break
             }
 
             //WINNER is determined by the interrupts, they will change the var winner to 1 or 2 respectively
