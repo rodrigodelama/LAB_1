@@ -64,6 +64,7 @@ unsigned int playing = 0; // to not activate the interrupts unless we are awaiti
 //timer vars
 int countdown[] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
 //unsigned int game1_rand;
+unsigned int diff;
 
 /* ideas for timer variables
 unsigned int led_timer = sec; //minimum 1 sec
@@ -353,11 +354,16 @@ int main(void)
             while ((game == 1) && (winner == 0)) //(game == 1) is also necessary in case we want to change games here
             {
               playing = 1;
-              if (prev_game != game) break; //FIXME: Not sure if needed
+              if (prev_game != game) break;  //Not sure if needed
 
-              //Start counter
+              //FIXME: review - ask
+              //Start counters
               TIM3->CR1 |= BIT_0; //start counting
               TIM3->EGR |= BIT_0; //updates all TIM registers
+
+              //Start TICs counters
+              TIM4->CR1 |= BIT_0;
+              TIM4->EGR |= BIT_0;
 
               //Before 10 secs at ANY time, LED1 ON
               //Random timer reaches zero - led
@@ -379,8 +385,11 @@ int main(void)
               GPIOA->BSRR = (1 << 12) << 16; //Turn off the LED after a win
               BSP_LCD_GLASS_Clear();
               
+              //FIXME: review
+              //which is tim4->cnt count for ch3 or ch4 ???????
+              diff = ((TIM4->CNT) - (TIM3->CCR1))
               //format shall be Y user followed by XXXX milliseconds
-              BSP_LCD_GLASS_DisplayString((uint8_t*)" P1 W"); //(" 1%d", time_taken)
+              BSP_LCD_GLASS_DisplayString((uint8_t*)" 1%d", diff);
 
               espera(2*sec); //wait so the player acknowledges their win
               winner = 0; //reset winner for future match
@@ -391,7 +400,9 @@ int main(void)
             {
               GPIOA->BSRR = (1 << 12) << 16;
               BSP_LCD_GLASS_Clear();
-              BSP_LCD_GLASS_DisplayString((uint8_t*)" P2 W");
+
+              diff = ((TIM4->CNT) - (TIM3->CCR1))
+              BSP_LCD_GLASS_DisplayString((uint8_t*)" 2%d", diff);
 
               espera(2*sec);
               winner = 0;
