@@ -65,6 +65,9 @@ unsigned int playing = 0; // to not activate the interrupts unless we are awaiti
 int countdown[] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
 //unsigned int game1_rand;
 unsigned int diff;
+unsigned int diff1;
+unsigned int diff2;
+char p1w[10];
 
 /* ideas for timer variables
 unsigned int led_timer = sec; //minimum 1 sec
@@ -132,6 +135,7 @@ void TIM3_IRQHandler(void)
             TIM3->CCR = random_num(0, 10000);
  */
   //we possibly should not care, just use ch1 for game 1, ch2 for game 2
+  /*
   if ((TIM3->SR & BIT_1) != 0)
   {
     switch (game)
@@ -140,7 +144,7 @@ void TIM3_IRQHandler(void)
       //for led shutoff
       //game1_rand = random_num(0, 10000);
       //TIM3->CCR1 = game1_rand;
-      TIM3->CCR1 = random_num(0, 10000);
+      TIM3->CCR1 = random_num(0, 1000000);
     break;
 
     case 2:
@@ -151,6 +155,7 @@ void TIM3_IRQHandler(void)
       break;
     }
   }
+*/
 }
 //timers TIC timer 4 ch1 and ch2
 void TIM4_IRQHandler(void)
@@ -255,28 +260,38 @@ int main(void)
   /* TIM3 --------------------------------------------------------------------*/
   //No pin assignment, we just plainly use it for the TOC
   //SET-UP for TIMs 3, CH3 & CH4 - TOCs, for random LED off and TBD
-  //TIM3->CR1 = 0x0001; // DONE IN CODE BELOW
+  TIM3->CR1 = 0x0000; // ON IN CODE BELOW
   TIM3->CR2 = 0x0000; //Always set to 0
   TIM3->SMCR = 0x0000; //Always set to 0
-  TIM3->PSC = 31999;
+  TIM3->PSC = 32000;
   TIM3->CNT = 0;
   TIM3->ARR = 0xFFFF; //USED IN PWN
+  TIM3->CCMR1 = 0x0000;  //CCyS = 0 (TOC)
+                         //OCyM = 000 (no external output) 
+                         //OCyPE = 0 (no preload)
+  TIM3->CCER = 0x0000;   //CCyP = 0 (always in TOC)
+                         //CCyE = (external output disabled)
+  TIM3->CCR1 = random_num(0, 10000);
+  //TIM3->CC1S = 00;
+  //TIM3->OC1M = 000; //TOC NO OUTPUT
 
   TIM3->DIER |= BIT_0; //activated IRQ for channel 1
 
   /* TIM 4 -------------------------------------------------------------------*/
   //Assigned to PB7 and PB7
   //SET-UP for TIMs 4, CH1 & CH2 - TICs
-  //TIM4->CR1 = 0x0001; //Set to 1 for Counter ON - DONE IN CODE BELOW
+  TIM4->CR1 = 0x0000; //Set to 0 for Counter OFF - ON IN CODE BELOW
                       //ARPE off because NOT PWM
   TIM4->CR2 = 0x0000; //Always set to 0
   TIM4->SMCR = 0x0000; //Always set to 0
   TIM4->PSC = 31999; //Means fclk/(PSC+1)
   TIM4->CNT = 0;
   TIM4->ARR = 0xFFFF; //USED IN PWN
+  //TIM4->CC3S = 01;
+  //TIM4->CC4S = 01;
 
   //FIXME:
-  TIM3->DIER |= ((1 << 2) & (1 << 3)); //activated IRQ for channels 3 and 4 ???
+  TIM4->DIER = 0X0000; //No IRQ after succesful comparison -> CCyIE = 0
 
   /* COMMENTS ----------------------------------------------------------------*/
   //CCMR1 for ch1 and ch2
@@ -291,9 +306,10 @@ int main(void)
 
   /* LEDs ---------------------------------------------------------------------*/
   //LED1
-  //PA12 (EXTERNAL LED1) - digital output (01)
+  //PA12 (EXTERNAL LED1) - AF
   GPIOA->MODER &= ~(1 << (12*2 + 1));
   GPIOA->MODER |= (1 << (12*2));
+  GPIOA->AFR[0] |= (0x02 << (12*4)); // Writes 0010 in AFRL12
   //Set up with pull-up resistor (01)
   GPIOA->PUPDR &= ~(1 << (12*2 + 1));
   GPIOA->PUPDR |= (1 << (12*2));
@@ -358,23 +374,28 @@ int main(void)
 
               //FIXME: review - ask
               //Start counters
-              TIM3->CR1 |= BIT_0; //start counting
-              TIM3->EGR |= BIT_0; //updates all TIM registers
+              TIM3->CR1 |= 0x0001;   //CEN = 1 Start counter
+              TIM3->EGR |= 0x0001;   //UG = 1->Generate an update event to update all registers 
+              //TIM3->SR = 0;          //clear counter flags
+   
 
-              //Start TICs counters
-              TIM4->CR1 |= BIT_0;
-              TIM4->EGR |= BIT_0;
+              
 
               //Before 10 secs at ANY time, LED1 ON
               //Random timer reaches zero - led
-              if ((TIM3->CNT) == (TIM3->CCR1))
+              while ((TIM3->CNT) != (TIM3->CCR1))
               {
-                while (winner == 0)
-                {
-                  GPIOA->BSRR = (1 << 12); // LED ON while no player has pressed their button yet
-                  
-                  if (prev_game != game) break;
-                }
+                if (prev_game != game) break;
+              }
+              while (winner == 0)
+              {
+                while((TIM3->SR&0x0002)==0);
+                TIM3->SR &= ~(0x0002);
+                GPIOA->BSRR = (1 << 12); // LED ON while no player has pressed their button yet
+                  //Start TICs counters
+                TIM4->CR1 |= BIT_0;
+                TIM4->EGR |= BIT_0;
+                if (prev_game != game) break;
               }
               if (prev_game != game) break;
             }
@@ -387,9 +408,12 @@ int main(void)
               
               //FIXME: review
               //which is tim4->cnt count for ch3 or ch4 ???????
-              diff = ((TIM4->CNT) - (TIM3->CCR1))
+              diff = ((TIM4->CNT) - (TIM3->CCR1));
+
+              diff1 = diff + 10000; //+10000 to always have P1 won (1XXXX
+              //p1w = strcat(" 1", (char*) diff);
               //format shall be Y user followed by XXXX milliseconds
-              BSP_LCD_GLASS_DisplayString((uint8_t*)" 1%d", diff);
+              BSP_LCD_GLASS_DisplayString((uint8_t*) diff1);
 
               espera(2*sec); //wait so the player acknowledges their win
               winner = 0; //reset winner for future match
@@ -401,8 +425,10 @@ int main(void)
               GPIOA->BSRR = (1 << 12) << 16;
               BSP_LCD_GLASS_Clear();
 
-              diff = ((TIM4->CNT) - (TIM3->CCR1))
-              BSP_LCD_GLASS_DisplayString((uint8_t*)" 2%d", diff);
+              diff = ((TIM4->CNT) - (TIM3->CCR1));
+              diff2 = diff + 20000; //+20000 to always have P2 won (2XXXX)
+              //char p2w[] = " 2" + diff;
+              BSP_LCD_GLASS_DisplayString((uint8_t*) diff2);
 
               espera(2*sec);
               winner = 0;
@@ -441,7 +467,7 @@ int main(void)
             //if (prev_game != game) break;
             BSP_LCD_GLASS_Clear();
             BSP_LCD_GLASS_DisplayString((uint8_t*)" SET");
-
+/*
             //NOT A WHILE - Not waiting, just counting
             //We want a continuously running game (3 seconds max of waiting for user input)
             if ((winner == 0) && (tim4_TICs << 3*sec)) //if wait to press is longer than 3 secs after countdown = 0, abort and restart game
@@ -484,6 +510,7 @@ int main(void)
               //USE TIMER to count how many secs and add to a variable
               //time_taken = timer_value at break
             }
+*/
           }
         break;
 

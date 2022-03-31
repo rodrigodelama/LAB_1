@@ -4,4 +4,4 @@
 ../Core/Src/stm32l1xx_hal_msp.c:149:6:HAL_LCD_MspInit	56	static
 ../Core/Src/stm32l1xx_hal_msp.c:232:6:HAL_LCD_MspDeInit	16	static
 ../Core/Src/stm32l1xx_hal_msp.c:296:6:HAL_TIM_Base_MspInit	48	static
-../Core/Src/stm32l1xx_hal_msp.c:332:6:HAL_TIM_Base_MspDeInit	16	static
+../Core/Src/stm32l1xx_hal_msp.c:343:6:HAL_TIM_Base_MspDeInit	16	static
