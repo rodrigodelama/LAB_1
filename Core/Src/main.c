@@ -51,6 +51,7 @@
 
 LCD_HandleTypeDef hlcd;
 
+TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
@@ -85,6 +86,7 @@ static void MX_ADC_Init(void);
 static void MX_LCD_Init(void);
 static void MX_TS_Init(void);
 static void MX_TIM4_Init(void);
+static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -158,9 +160,11 @@ void TIM3_IRQHandler(void)
 */
 }
 //timers TIC timer 4 ch1 and ch2
-void TIM4_IRQHandler(void)
+void TIM4_IRQHandler(void) //TIC
 {
-
+  //checks if it has been activated if so makes it work
+//checks if the SR has been flagged or if its
+//checks if the event has come
 }
 /* USER CODE END 0 */
 
@@ -196,6 +200,7 @@ int main(void)
   MX_LCD_Init();
   MX_TS_Init();
   MX_TIM4_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   //DECLARATION OF PERIPHERALS WE WILL USE
 
@@ -210,10 +215,10 @@ int main(void)
   GPIOA->MODER &= ~(1 << (0*2 + 1));
   GPIOA->MODER &= ~(1 << (0*2));
   //EXTI0
-  EXTI->IMR |= BIT_0; // Enables the Interrupt (i.e. the event) (IMR = Interrupt Mask Register)
   SYSCFG->EXTICR[0] = 0000; // Linking EXTI0 to GPIOA (PA0 = USER BUTTON) - all zeros mean GPIOA
   EXTI->RTSR |= BIT_0; // Enables rising edge in EXTI0
   EXTI->FTSR &= ~(BIT_0); // Disables falling edge in EXTI0
+  EXTI->IMR |= BIT_0; // Enables the Interrupt (i.e. the event) (IMR = Interrupt Mask Register)
   NVIC->ISER[0] |= (1 << 6); //Enables EXTI0 in the NVICs ISER[0]s position 6
   
   //USING I/O PINS 7 & 6 FOR PLAYER BUTTONS 1 & 2 RESPECTIVELY
@@ -230,11 +235,11 @@ int main(void)
   GPIOB->PUPDR &= ~(1 << (7*2 + 1));
   GPIOB->PUPDR |= (1 << (7*2));
   //EXTI7
-  EXTI->IMR |= BIT_7; // Enables the interrupt
   SYSCFG->EXTICR[1] |= BIT_12; // Linking EXTI7 to GPIOB (PB7 = BUTTON 1)
                     // Sets a 1 in bit 12 see page 145 of the manual
   EXTI->RTSR &= ~(BIT_7); // Disables rising edge in EXTI7
   EXTI->FTSR |= BIT_7; // Enables falling edge in EXTI7
+  EXTI->IMR |= BIT_7; // Enables the interrupt
   NVIC->ISER[0] |= (1 << 23); // EXTI7 has position 23 in ISER[0]
 
   /* PB6 ---------------------------------------------------------------------*/
@@ -249,11 +254,11 @@ int main(void)
   //AF for TIM4_CH1
   GPIOB->AFR[0] |= (0x02 << (6*4)); // Writes 0010 in AFRL6
   //EXTI6
-  EXTI->IMR |= BIT_6; // Enables the interrupt
   SYSCFG->EXTICR[1] |= BIT_8; // Linking EXTI6 to GPIOB (PB6 = BUTTON 2)
                     // Sets a 1 in bit 8 see page 145 of the manual
   EXTI->RTSR &= ~(BIT_6); // Disables rising edge in EXTI6
   EXTI->FTSR |= BIT_6; // Enables falling edge in EXTI6
+  EXTI->IMR |= BIT_6; // Enables the interrupt
   NVIC->ISER[0] |= (1 << 23); // EXTI6 & 7 have position 23 in the NVIC, since
 
   //TIMERS
@@ -261,8 +266,8 @@ int main(void)
   //No pin assignment, we just plainly use it for the TOC
   //SET-UP for TIMs 3, CH3 & CH4 - TOCs, for random LED off and TBD
   TIM3->CR1 = 0x0000; // ON IN CODE BELOW
-  TIM3->CR2 = 0x0000; //Always set to 0
-  TIM3->SMCR = 0x0000; //Always set to 0
+  TIM3->CR2 = 0x0000; // Always set to 0
+  TIM3->SMCR = 0x0000; // Always set to 0
   TIM3->PSC = 32000;
   TIM3->CNT = 0;
   TIM3->ARR = 0xFFFF; //USED IN PWN
@@ -274,8 +279,8 @@ int main(void)
   TIM3->CCR1 = random_num(0, 10000);
   //TIM3->CC1S = 00;
   //TIM3->OC1M = 000; //TOC NO OUTPUT
-
   TIM3->DIER |= BIT_0; //activated IRQ for channel 1
+  TIM3->CR1 |= 1; // Set BIT_0 to 1 to activate the timer
 
   /* TIM 4 -------------------------------------------------------------------*/
   //Assigned to PB7 and PB7
@@ -676,6 +681,51 @@ static void MX_LCD_Init(void)
   /* USER CODE BEGIN LCD_Init 2 */
 
   /* USER CODE END LCD_Init 2 */
+
+}
+
+/**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 0;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 65535;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
 
 }
 
